@@ -1,11 +1,11 @@
 pragma solidity ^0.4.15;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
-import 'zeppelin-solidity/contracts/token/ERC20.sol';
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "./helpers/NonZero.sol";
 
-contract Token is ERC20, Ownable, NonZero {
+contract Token is StandardToken, Ownable, NonZero {
 
     using SafeMath for uint;
 
@@ -14,14 +14,14 @@ contract Token is ERC20, Ownable, NonZero {
     string public constant symbol = "SYMBOL";
 
     uint8 public decimals = 18;
-    
+
     // Mapping to keep user's balances
     mapping (address => uint256) balances;
     // Mapping to keep user's allowances
     mapping (address => mapping (address => uint256)) allowed;
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
-    
+
     // Allocation for the Vanbex Team
     uint256 public vanbexTeamSupply;
     // Etherparty platform supply
@@ -83,7 +83,7 @@ contract Token is ERC20, Ownable, NonZero {
 /////////////////////// ERC20 FUNCTIONS ///////////////////////
 
     // Transfer
-    function transfer(address _to, uint256 _amount) notBeforeCrowdfundEnds returns (bool success) {
+    function transfer(address _to, uint256 _amount) notBeforeCrowdfundEnds public returns (bool success)  {
         require(balanceOf(msg.sender) >= _amount);
         addToBalance(_to, _amount);
         decrementBalance(msg.sender, _amount);
@@ -92,7 +92,7 @@ contract Token is ERC20, Ownable, NonZero {
     }
 
     // Transfer from one address to another (need allowance to be called first)
-    function transferFrom(address _from, address _to, uint256 _amount) notBeforeCrowdfundEnds returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _amount) notBeforeCrowdfundEnds public returns (bool success)  {
         require(allowance(_from, msg.sender) >= _amount);
         decrementBalance(_from, _amount);
         addToBalance(_to, _amount);
@@ -102,7 +102,7 @@ contract Token is ERC20, Ownable, NonZero {
     }
 
     // Approve another address a certain amount of FUEL
-    function approve(address _spender, uint256 _value) returns (bool success) {
+    function approve(address _spender, uint256 _value) public returns (bool success)  {
         require((_value == 0) || (allowance(msg.sender, _spender) == 0));
         allowed[msg.sender][_spender] = _value;
         Approval(msg.sender, _spender, _value);
@@ -110,47 +110,47 @@ contract Token is ERC20, Ownable, NonZero {
     }
 
     // Get an address's FUEL allowance
-    function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+    function allowance(address _owner, address _spender) public constant returns (uint256 remaining)  {
         return allowed[_owner][_spender];
     }
 
     // Get the FUEL balance of any address
-    function balanceOf(address _owner) constant returns (uint256 balance) {
+    function balanceOf(address _owner) public constant returns (uint256 balance)  {
         return balances[_owner];
     }
 
 /////////////////////// TOKEN FUNCTIONS ///////////////////////
 
     // Constructor
-    function Token() {
-        crowdfundEndsAt = 1509292800;                                               // Oct 29, 9 AM PST
+    function Token()  public {
+        crowdfundEndsAt = now + 28 days;                                               // Oct 29, 9 AM PST
         vanbexTeamVestingPeriod = crowdfundEndsAt.add(183 * 1 days);                // 6 months vesting period
 
-        totalSupply = 1 * 10**27;                                                   // 100% - 1 billion total FUEL tokens with 18 decimals
+        totalSupply_ = 1 * 10**27;                                                   // 100% - 1 billion total FUEL tokens with 18 decimals
         vanbexTeamSupply = 5 * 10**25;                                              // 5% - 50 million for etherparty team
         platformSupply = 5 * 10**25;                                                // 5% - 50 million to be sold on the etherparty platform in-app
         incentivisingEffortsSupply = 1 * 10**26;                                    // 10% - 100 million for incentivising efforts
         presaleSupply = 54 * 10**25;                                                // 540,000,000 fuel tokens available for presale with overflow for bonus included
         icoSupply = 26 * 10**25;                                                    // 260 million fuel tokens for ico with potential for extra after finalizing presale
-       
+
         presaleAmountRemaining = presaleSupply;                                     // Decreased over the course of the pre-sale
         vanbexTeamAddress = 0xCF701D8eA4C727466D42651dda127c0c033076B0;             // Vanbex Team Address
         platformAddress = 0x67d0f80Be6f9610367b92a2D6B775f3d407B301F;               // Platform Address
         incentivisingEffortsAddress = 0x5584b17B40F6a2E412e65FcB1533f39Fc7D8Aa26;   // Community incentivisation address
 
-        addToBalance(incentivisingEffortsAddress, incentivisingEffortsSupply);     
-        addToBalance(platformAddress, platformSupply);                              
+        addToBalance(incentivisingEffortsAddress, incentivisingEffortsSupply);
+        addToBalance(platformAddress, platformSupply);
     }
 
     // Sets the crowdfund address, can only be done once
     function setCrowdfundAddress(address _crowdfundAddress) external onlyOwner nonZeroAddress(_crowdfundAddress) {
         require(crowdfundAddress == 0x0);
         crowdfundAddress = _crowdfundAddress;
-        addToBalance(crowdfundAddress, icoSupply); 
+        addToBalance(crowdfundAddress, icoSupply);
     }
 
     // Function for the Crowdfund to transfer tokens
-    function transferFromCrowdfund(address _to, uint256 _amount) onlyCrowdfund nonZeroAmount(_amount) nonZeroAddress(_to) returns (bool success) {
+    function transferFromCrowdfund(address _to, uint256 _amount) onlyCrowdfund nonZeroAmount(_amount) public nonZeroAddress(_to) returns (bool success)  {
         require(balanceOf(crowdfundAddress) >= _amount);
         decrementBalance(crowdfundAddress, _amount);
         addToBalance(_to, _amount);
@@ -159,7 +159,7 @@ contract Token is ERC20, Ownable, NonZero {
     }
 
     // Release Vanbex team supply after vesting period is finished.
-    function releaseVanbexTeamTokens() checkVanbexTeamVestingPeriod onlyOwner returns(bool success) {
+    function releaseVanbexTeamTokens() checkVanbexTeamVestingPeriod onlyOwner  public returns(bool success)  {
         require(vanbexTeamSupply > 0);
         addToBalance(vanbexTeamAddress, vanbexTeamSupply);
         Transfer(0x0, vanbexTeamAddress, vanbexTeamSupply);
@@ -197,7 +197,7 @@ contract Token is ERC20, Ownable, NonZero {
     // Function to send FUEL to presale investors
     function deliverPresaleFuelBalances(address[] _batchOfAddresses, uint[] _amountOfFuel) external onlyOwner returns (bool success) {
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
-            deliverPresaleFuelBalance(_batchOfAddresses[i], _amountOfFuel[i]);            
+            deliverPresaleFuelBalance(_batchOfAddresses[i], _amountOfFuel[i]);
         }
         return true;
     }
@@ -208,7 +208,7 @@ contract Token is ERC20, Ownable, NonZero {
         require(presaleAmountRemaining > 0);
         addToBalance(_accountHolder, _amountOfBoughtFuel);
         Transfer(0x0, _accountHolder, _amountOfBoughtFuel);
-        presaleAmountRemaining = presaleAmountRemaining.sub(_amountOfBoughtFuel);    
+        presaleAmountRemaining = presaleAmountRemaining.sub(_amountOfBoughtFuel);
     }
 
     // Add to balance

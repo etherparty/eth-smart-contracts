@@ -13,6 +13,10 @@
   "license": "ISC",
   "dependencies": {
     "bignumber.js": "^5.0.0",
-    "zeppelin-solidity": "^1.4.0"
+    "sha3": "^1.2.0",
+    "zeppelin-solidity": "1.6.0"
+  },
+  "devDependencies": {
+    "solidity-coverage": "^0.4.9"
   }
 }

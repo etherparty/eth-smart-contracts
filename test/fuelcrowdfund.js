@@ -1,18 +1,18 @@
 var FuelCrowdfund = artifacts.require("./Crowdfund.sol");
 var FuelToken = artifacts.require("./Token.sol");
 var BigNumber = require('bignumber.js');
+const oneWeekInSeconds = 604800;
+
 
 // FUEL Crowdfund
 contract('FuelCrowdfund', function(accounts) {
-
-  function fromBigNumberWeiToEth(bigNum) {
-    return bigNum.dividedBy(new BigNumber(10).pow(18)).toNumber();
-  }
-
   async function addSeconds(seconds) {
     return web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [seconds], id: 0});
   }
 
+  function fromBigNumberWeiToEth(bigNum) {
+    return bigNum.dividedBy(new BigNumber(10).pow(18)).toNumber();
+  }
   async function getTimestampOfCurrentBlock() {
     return web3.eth.getBlock(web3.eth.blockNumber).timestamp;
   }
@@ -35,7 +35,7 @@ contract('FuelCrowdfund', function(accounts) {
 
     const startsAt = await crowdfund.startsAt.call();
     const currentBlockTimestamp = await getTimestampOfCurrentBlock();
-    
+
     await addSeconds(startsAt - currentBlockTimestamp);
 
     await web3.eth.sendTransaction({from: buyerAddress, to: crowdfund.address, gas: gasAmount, value: web3.toWei("1", "Ether")}); // send in 1
@@ -47,11 +47,11 @@ contract('FuelCrowdfund', function(accounts) {
     const proxyBuyerBalance = await token.balanceOf.call(proxyBuyer, {from: buyerAddress, gas: gasAmount});
     assert.equal(fromBigNumberWeiToEth(endBuyerBalance), 3000, "The balance of the end buyer was not incremented by 3000 FUEL");
     assert.equal(fromBigNumberWeiToEth(proxyBuyerBalance), 0, "The balance of the proxy is not 0");
-  
-  
+
+
     // advance time
     const oneWeekInSeconds = 604800;
-    await addSeconds(oneWeekInSeconds);
+    await addSeconds(oneWeekInSeconds + 20000);
     await web3.eth.sendTransaction({from: buyerAddress, to: crowdfund.address, gas: gasAmount, value: web3.toWei("1", "Ether")}); // send in 1
     const secondBalance = await token.balanceOf.call(buyerAddress, {from: buyerAddress, gas: gasAmount});
     assert.equal(fromBigNumberWeiToEth(secondBalance) - fromBigNumberWeiToEth(firstBalance), 2250, "The balance of the buyer was not incremented by 2250 FUEL");
@@ -87,25 +87,24 @@ contract('FuelCrowdfund', function(accounts) {
   it("closeCrowdfund(): can close a crowdsale, and only vanbex can do it", async () => {
 
     const oneWeekInSeconds = 604800;
-    await addSeconds(oneWeekInSeconds);
     const token = await FuelToken.new({from: vanbexAddress, gas: gasAmount});
     const crowdfund = await FuelCrowdfund.new(token.address, {from: vanbexAddress, gas: gasAmount});
     await token.setCrowdfundAddress(crowdfund.address, {from: vanbexAddress, gas: gasAmount});
     await token.finalizePresale({from: vanbexAddress, gas: gasAmount});
+    await addSeconds(oneWeekInSeconds * 500);
     const platformAddress = await token.platformAddress.call();
-    
 
     let initialCrowdfundBalance = await token.balanceOf.call(crowdfund.address, {gas: gasAmount});
     let initialPlatformBalance = await token.balanceOf.call(platformAddress, {gas: gasAmount});
+
 
     try {
       await crowdfund.closeCrowdfund({from: buyerAddress, gas: gasAmount});
     } catch(e) {
       assert.equal(true, true, "Buyer could close the crowdfund");
     }
-
     await crowdfund.closeCrowdfund({from: vanbexAddress, gas: gasAmount});
-    
+
     const platformBalance = await token.balanceOf.call(platformAddress, {gas: gasAmount});
     assert.equal(fromBigNumberWeiToEth(platformBalance) - fromBigNumberWeiToEth(initialPlatformBalance), fromBigNumberWeiToEth(initialCrowdfundBalance), "The right amount wasn't tranferred from crowdfund to platform after closing the crowdfund");
     const newCrowdfundBalance = await token.balanceOf.call(crowdfund.address, {gas: gasAmount});
@@ -126,7 +125,7 @@ contract('FuelCrowdfund', function(accounts) {
     }catch(e) {
       assert(true, true);
       await crowdfund.changeWalletAddress(walletAddress, {buyerAddress, gas: gasAmount});
-      
+
       const newWallet = await crowdfund.wallet.call();
       assert.equal(newWallet, walletAddress, "The new wallet address wasn't set");
     }
@@ -136,6 +135,9 @@ contract('FuelCrowdfund', function(accounts) {
 // FUEL Token
 
 contract('FuelToken', function(accounts) {
+  async function addSeconds(seconds) {
+    return web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [seconds], id: 0});
+  }
 
   function fromBigNumberWeiToEth(bigNum) {
     return bigNum.dividedBy(new BigNumber(10).pow(18)).toNumber();
@@ -153,7 +155,7 @@ contract('FuelToken', function(accounts) {
   const buyerAddress = accounts[4];
   const buyerAddress2 = accounts[7];
   const crowdfundAddress = accounts[8];
-  
+
   it("function(): should throw on a default call", async () => {
     const token = await FuelToken.new({from: vanbexAddress});
     try {
@@ -162,10 +164,10 @@ contract('FuelToken', function(accounts) {
       assert.equal(true, true);
     }
   });
-    
+
   it("totalSupply: should have 1,000,000,000 FuelToken", function(done) {
     let token;
-    
+
       FuelToken.new({from: vanbexAddress, gas: 4612386})
     .then(function(_token) {
       token = _token;
@@ -175,8 +177,8 @@ contract('FuelToken', function(accounts) {
       done();
     }).catch(done);
   });
-  
-  
+
+
   // // ADDRESS SETTERS
 
   it("setCrowdfundAddress(): it should NOT let anyone but the founder change the crowdfund address", function(done) {
@@ -218,7 +220,7 @@ contract('FuelToken', function(accounts) {
   // // SUPPLY
 
   it("icoSupply: should put 260,000,000 FUEL in the icoSupply", function(done) {
-    
+
       FuelToken.new({from: vanbexAddress, gas: 4612386})
     .then(function(tokenInstance) {
       return tokenInstance.icoSupply.call({from: buyerAddress, gas: 4612386});
@@ -229,7 +231,7 @@ contract('FuelToken', function(accounts) {
   });
 
   it("presaleSupply: should put 540,000,000 FUEL in the presaleSupply", function(done) {
-    
+
     FuelToken.new({from: vanbexAddress, gas: 4612386})
     .then(function(tokenInstance) {
       return tokenInstance.presaleSupply.call({from: buyerAddress, gas: 4612386});
@@ -261,10 +263,12 @@ contract('FuelToken', function(accounts) {
 
   it("transfer(): should transfer tokens", function(done) {
     let token;
+    const oneWeekInSeconds = 604800;
     FuelToken.new({from: vanbexAddress, gas: 4612386})
-    .then(function(tokenInstance) {
+    .then(async function(tokenInstance) {
       token = tokenInstance;
       token.setCrowdfundAddress(crowdfundAddress); // will allocate tokens to be used for transfer
+      await addSeconds(oneWeekInSeconds * 5);
       return token.transfer(buyerAddress, 1000000000000000000, {from: crowdfundAddress, gas: 4612386})
     }).then(function(success) {
       return token.balanceOf(buyerAddress, {from: buyerAddress, gas: 4612386})
@@ -277,11 +281,14 @@ contract('FuelToken', function(accounts) {
   it("transferFrom(): should let the spender send the allowed amount for the sender, and decrement the amount from the allowance", function(done) {
     let token;
     FuelToken.new({from: vanbexAddress, gas: 4612386})
-    .then(function(tokenInstance) {
+    .then(async function(tokenInstance) {
       token = tokenInstance;
-      token.setCrowdfundAddress(crowdfundAddress); // will allocate tokens to be used for transfer
+      token.setCrowdfundAddress(crowdfundAddress);
+      await addSeconds(oneWeekInSeconds * 5);
+       // will allocate tokens to be used for transfer
       return token.approve(buyerAddress2, 1000000000000000000, {from: buyerAddress, gas: 4612386});
     }).then(function(success) {
+
       return token.transfer(buyerAddress, 1000000000000000000, {from: crowdfundAddress, gas: 4612386})
     }).then(function(success) {
       return token.balanceOf(buyerAddress, {from: buyerAddress, gas: 4612386})
@@ -302,9 +309,11 @@ contract('FuelToken', function(accounts) {
   it("transferFrom(): should NOT let the spender send an unallowed amount", function(done) {
     let token;
     FuelToken.new({from: vanbexAddress, gas: 4612386})
-    .then(function(tokenInstance) {
+    .then(async function(tokenInstance) {
       token = tokenInstance;
       token.setCrowdfundAddress(crowdfundAddress); // will allocate tokens to be used for transfer
+      await addSeconds(oneWeekInSeconds * 5);
+
       return token.transfer(buyerAddress, 1000000000000000000, {from: crowdfundAddress, gas: 4612386})
     }).then(function(success) {
       return token.balanceOf(buyerAddress, {from: buyerAddress, gas: 4612386})
@@ -320,9 +329,11 @@ contract('FuelToken', function(accounts) {
   it("transferFrom(): should NOT let the spender send an allowed amount that the sender doesn't have", function(done) {
     let token;
     FuelToken.new({from: vanbexAddress, gas: 4612386})
-    .then(function(tokenInstance) {
+    .then(async function(tokenInstance) {
       token = tokenInstance;
       token.setCrowdfundAddress(crowdfundAddress); // will allocate tokens to be used for transfer
+      await addSeconds(oneWeekInSeconds * 5);
+
       return token.approve(buyerAddress2, 1000000000000000000, {from: buyerAddress, gas: 4612386});
     }).then(function(success) {
       return token.transfer(buyerAddress, 1000000000000000000, {from: crowdfundAddress, gas: 4612386})
@@ -362,12 +373,13 @@ contract('FuelToken', function(accounts) {
   });
 
 
-  it("releaseVanbexTeamTokens(): hould not let us release the tokens before 6 months, and only let vanbex do it", async () => {
-    
+  it("releaseVanbexTeamTokens(): should not let us release the tokens before 6 months, and only let vanbex do it", async () => {
+
     const token = await FuelToken.new({from: vanbexAddress});
     const vanbexTeamAddress = await token.vanbexTeamAddress.call();
     const initialVanbexTeamBalance = await token.balanceOf.call(vanbexTeamAddress);
     const vanbexTeamSupply = await token.vanbexTeamSupply.call();
+
     try {
       await token.releaseVanbexTeamTokens({from: vanbexAddress});
     } catch(e) {
@@ -376,8 +388,8 @@ contract('FuelToken', function(accounts) {
 
     const vanbexVestingPeriod = await token.vanbexTeamVestingPeriod.call();
 
-    const currentBlockTimestamp = await getTimestampOfCurrentBlock();
-    await addSeconds(vanbexVestingPeriod - currentBlockTimestamp);
+
+    await addSeconds(oneWeekInSeconds * 500);
 
     try {
       await token.releaseVanbexTeamTokens({from: accounts[3]});
@@ -390,5 +402,5 @@ contract('FuelToken', function(accounts) {
     assert.equal(fromBigNumberWeiToEth(newVanbexTeamBalance) - fromBigNumberWeiToEth(initialVanbexTeamBalance), fromBigNumberWeiToEth(vanbexTeamSupply), "50 mil wasn't added to the vanbex team wallet");
 
   });
-  
+
 });

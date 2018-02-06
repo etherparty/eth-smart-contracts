@@ -1,12 +1,12 @@
 pragma solidity ^0.4.15;
 
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./helpers/NonZero.sol";
 import "./Token.sol";
 
 contract Crowdfund is NonZero, Ownable {
-    
+
     using SafeMath for uint;
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
@@ -25,7 +25,7 @@ contract Crowdfund is NonZero, Ownable {
 
     // Instance of the Fuel token contract
     Token public token;
-    
+
 /////////////////////// EVENTS ///////////////////////
 
     // Emitted upon owner changing the wallet address
@@ -51,26 +51,26 @@ contract Crowdfund is NonZero, Ownable {
 
 
 /////////////////////// CROWDFUND FUNCTIONS ///////////////////////
-    
+
     // Constructor
-    function Crowdfund(address _tokenAddress) {
+    function Crowdfund(address _tokenAddress)  public {
         wallet = 0x45d75330a9ba60c3ca01defac938be235acfdc07;    // Etherparty Wallet Address
-        startsAt = 1506873600;                                  // Oct 1 2017, 9:00 AM PDT
-        endsAt = 1509292800;                                // ~4 weeks / 28 days later: Oct 29, 9 AM PST
+        startsAt = now;                                  // Oct 1 2017, 9:00 AM PDT
+        endsAt = now + 28 days;                                // ~4 weeks / 28 days later: Oct 29, 9 AM PST
         tokenAddress = _tokenAddress;                           // FUEL token Address
         token = Token(tokenAddress);
     }
 
     // Change main contribution wallet
-    function changeWalletAddress(address _wallet) onlyOwner {
+    function changeWalletAddress(address _wallet) onlyOwner  public {
         wallet = _wallet;
         WalletAddressChanged(_wallet);
     }
 
 
-    // Function to buy Fuel. One can also buy FUEL by calling this function directly and send 
+    // Function to buy Fuel. One can also buy FUEL by calling this function directly and send
     // it to another destination.
-    function buyTokens(address _to) crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable {
+    function buyTokens(address _to) crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable  public {
         uint256 weiAmount = msg.value;
         uint256 tokens = weiAmount * getRate();
         weiRaised = weiRaised.add(weiAmount);
@@ -105,7 +105,7 @@ contract Crowdfund is NonZero, Ownable {
 
     // To contribute, send a value transaction to the Crowdfund Address.
     // Please include at least 100 000 gas.
-    function () payable {
+    function () payable  public {
         buyTokens(msg.sender);
     }
 }
