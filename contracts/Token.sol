@@ -100,6 +100,7 @@ contract Token is StandardToken, Ownable {
      * @return bool True if successful else false
      */
     function moveAllocation(address _to, uint256 _amount) public returns(bool success) {
+        // Add checks on _to address
         require(allocations[msg.sender].timeLock < now);
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount); // will throw if goes less than 0
         balances[_to] = balances[_to].add(_amount);
