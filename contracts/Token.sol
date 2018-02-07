@@ -44,12 +44,23 @@ contract Token is StandardToken, Ownable {
     }
 /////////////////////// ERC20 FUNCTIONS ///////////////////////
 
-    // Transfer
+    /**
+     * @dev Transfer tokens to an address
+     * @param _to The address the tokens are transfered to
+     * @param _amount The amount of tokens transfered
+     * @return bool True if successful else false
+     */
     function transfer(address _to, uint256 _amount) onlyUnlocked public returns (bool success) {
         return super.transfer(_to, _amount);
     }
 
-    // Transfer from one address to another (need allowance to be called first)
+    /**
+     * @dev Transfer tokens from one address to another (needs allownace to be called first)
+     * @param _from The address the tokens are transfered from
+     * @param _to The address the tokens are being transfered to
+     * @param _amount The amount of tokens transfered
+     * @return bool True if successful else false
+     */
     function transferFrom(address _from, address _to, uint256 _amount) onlyUnlocked public returns (bool success) {
         return super.transferFrom(_from, _to, _amount);
 
@@ -57,7 +68,10 @@ contract Token is StandardToken, Ownable {
 
 /////////////////////// TOKEN FUNCTIONS ///////////////////////
 
-    // Constructor
+    /**
+     * @dev Constructor
+     * @param _owner The address of the contract owner
+     */
     function Token(address _owner) public {
         totalSupply_ = totSup; // For the totalSupply() function upstream
         owner = _owner;
@@ -79,7 +93,12 @@ contract Token is StandardToken, Ownable {
         crowdfundAddress = msg.sender;
     }
 
-    // Move allocation. Only the address with an allocation is allowed to do it.
+    /**
+     * @dev Called by an allocation to send tokens to an address
+     * @param _to The address the bought tokens are sent to
+     * @param _amount The amount of tokens being sent
+     * @return bool True if successful else false
+     */
     function moveAllocation(address _to, uint256 _amount) public returns(bool success) {
         require(allocations[msg.sender].timeLock < now);
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount); // will throw if goes less than 0
@@ -88,7 +107,10 @@ contract Token is StandardToken, Ownable {
         return true;
     }
 
-    // Unlock tokens can only be done by the crowdfund contract
+    /**
+     * @dev Unlocks the tokens. Can only be called by the crowdfund contract
+     * @return bool True if successful else false;
+     */
     function unlockTokens() external returns (bool) {
         require(msg.sender == crowdfundAddress);
         tokensLocked = false;
