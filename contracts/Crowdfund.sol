@@ -63,7 +63,10 @@ contract Crowdfund is NonZero, Ownable {
     }
 
 /////////////////////// CROWDFUND FUNCTIONS ///////////////////////
-    // Constructor
+    /**
+     * @dev Constructor
+     * @param _owner The address of the contract owner
+     */
     function Crowdfund(address _owner) internal {
 
         if (!userActivated) {
@@ -75,7 +78,10 @@ contract Crowdfund is NonZero, Ownable {
         token = new Token(owner); // Create new Token
     }
 
-    function startCrowdfund() public { // Either called by the owner, or the contract itself
+    /**
+     * @dev Called by the owner or the contract at the start of the crowdfund
+     */
+    function startCrowdfund() public {
         require(isReadyToActivate == false && (msg.sender == address(this) || msg.sender == owner));
             startsAt = now;
             endsAt = startsAt + crowdfundLength;
@@ -83,14 +89,19 @@ contract Crowdfund is NonZero, Ownable {
             assert(startsAt > now && startsAt < endsAt && endsAt > now);
     }
 
-    // Change main contribution wallet
+    /**
+     * @dev Change the main contribution wallet
+     * @param _wallet The new contribution wallet address
+     */
     function changeWalletAddress(address _wallet) onlyOwner public {
         wallet = _wallet;
         WalletAddressChanged(_wallet);
     }
 
-
-    // Function to buy. One can also buy by calling this function directly and send it to another destination.
+    /**
+     * @dev Buys tokens at the current rate
+     * @param _to The address the bought tokens are sent to
+     */
     function buyTokens(address _to) crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable public {
         uint256 weiAmount = msg.value;
         uint256 tokens = weiAmount * getRate();
