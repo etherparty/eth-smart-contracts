@@ -37,6 +37,10 @@ contract Crowdfund is NonZero, Ownable {
 
     uint256 public crowdfundLength; // {{.CrowdfundLength}}
 
+    uint256 totalWeeks = crowdfundLength / 1 weeks;
+
+    uint256[10] public rateArray = [3000, 2250, 1700, 1275]; //  {{.RateArray}}
+
 /////////////////////// EVENTS ///////////////////////
 
     // Emitted upon owner changing the wallet address
@@ -74,7 +78,7 @@ contract Crowdfund is NonZero, Ownable {
     function startCrowdfund() public { // Either called by the owner, or the contract itself
         require(isReadyToActivate == false && (msg.sender == address(this) || msg.sender == owner));
             startsAt = now;
-            endsAt = now + crowdfundLength;
+            endsAt = startsAt + crowdfundLength;
             isReadyToActivate = true;
             assert(startsAt > now && startsAt < endsAt && endsAt > now);
     }
@@ -120,36 +124,11 @@ contract Crowdfund is NonZero, Ownable {
 
     // Returns FUEL disbursed per 1 ETH depending on current time
     function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
-        if (now > (startsAt + 3 weeks)) {
-           return 1275; // week 4
-        } else if (now > (startsAt + 2 weeks)) {
-           return 1700; // week 3
-        } else if (now > (startsAt + 1 weeks)) {
-           return 2250; // week 2
-        } else {
-           return 3000; // week 1
-        }
+        uint256 weeksLeft = (crowdfundLength - now) / 1 weeks;
 
-    /*
-    ** pseudo-code
-        for var i := 0 ; i < len(prices); i++ {
-            if i == 0 {
-                `if (now > (startsAt + len(prices) weeks)) {
-                    return prices[i];
-                } `
-            } else if i < len(prices) -2 {
-                `else if (now > (startsAt + len(prices) weeks)) {
-                    return prices[i];
-                } `
-            } else {
-                `else {
-                    return prices[i];
-                }`
-            }
+        // currentWeek = totalWeeks - weeksLeft
+        return rateArray[totalWeeks - weeksLeft];
 
-        }
-            `
-     */
     }
 
     // Function to send Tokens to presale investors
