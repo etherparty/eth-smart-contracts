@@ -11,6 +11,8 @@ Here is a list of all requirements needed for the token creator contract
 
 - [X] ERC20 Compatible
 
+- [ ] Fixed total supply
+
 - [ ] Dynamic token allocation
 
 - [ ] Dynamic pricing rounds

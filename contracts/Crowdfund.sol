@@ -13,25 +13,34 @@ contract Crowdfund is NonZero, Ownable {
 
     // Address of the deployed FUEL Token contract
     address public tokenAddress;
-    // Address of secure wallet to send crowdfund contributions to
-    address public wallet;
-
     // Amount of wei currently raised
     uint256 public weiRaised = 0;
     // UNIX timestamp of when the crowdfund starts
     uint256 public startsAt;
     // UNIX timestamp of when the crowdfund ends
     uint256 public endsAt;
-
     // Instance of the Fuel token contract
     Token public token;
+    // Whether the crowdfund is in a "Ready to activate" state
+    bool private isReadyToActivate = false;
+    // Flag keeping track of crowdsale status. Ensures functions can only be called once
+    bool public crowdfundFinalized = false;
+
+
+    // Our own vars
+    // Whether the user wants to start the crowdfund
+    bool private userActivated = false; // {{.UserActivated}}
+    // Address of secure wallet to send crowdfund contributions to
+    address public wallet = 0x0; // {{.WalletAddress}}
+
+    address public finalAddress = 0x0; // {{.FinalAddress}}
+
+    uint256 public crowdfundLength; // {{.CrowdfundLength}}
 
 /////////////////////// EVENTS ///////////////////////
 
     // Emitted upon owner changing the wallet address
     event WalletAddressChanged(address _wallet);
-    // Emitted upon crowdfund being finalized
-    event AmountRaised(address beneficiary, uint amountRaised);
     // Emmitted upon purchasing tokens
     event TokenPurchase(address indexed purchaser, uint256 value, uint256 amount);
 
@@ -44,54 +53,95 @@ contract Crowdfund is NonZero, Ownable {
     }
 
     // Ensure actions can only happen after crowdfund ends
-    modifier notBeforeCrowdfundEnds(){
+    modifier notBeforeCrowdfundEnds() {
         require(now >= endsAt);
         _;
     }
 
-
 /////////////////////// CROWDFUND FUNCTIONS ///////////////////////
-
     // Constructor
-    function Crowdfund(address _tokenAddress)  public {
-        wallet = 0x45d75330a9ba60c3ca01defac938be235acfdc07;    // Etherparty Wallet Address
-        startsAt = now;                                  // Oct 1 2017, 9:00 AM PDT
-        endsAt = now + 28 days;                                // ~4 weeks / 28 days later: Oct 29, 9 AM PST
-        tokenAddress = _tokenAddress;                           // FUEL token Address
-        token = Token(tokenAddress);
+    function Crowdfund() internal {
+
+        if (!userActivated) {
+            // Either we start the crowdfund now, or later on.
+            startCrowdfund();
+        }
+        token = new Token(msg.sender); // Create new Token
+    }
+
+    function startCrowdfund() public { // Either called by the owner, or the contract itself
+        require(isReadyToActivate == false && (msg.sender == address(this) || msg.sender == owner));
+            startsAt = now;
+            endsAt = now + crowdfundLength;
+            isReadyToActivate = true;
+            assert(startsAt > now && startsAt < endsAt && endsAt > now);
     }
 
     // Change main contribution wallet
-    function changeWalletAddress(address _wallet) onlyOwner  public {
+    function changeWalletAddress(address _wallet) onlyOwner public {
         wallet = _wallet;
         WalletAddressChanged(_wallet);
     }
 
 
-    // Function to buy Fuel. One can also buy FUEL by calling this function directly and send
-    // it to another destination.
-    function buyTokens(address _to) crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable  public {
+    // Function to buy. One can also buy by calling this function directly and send it to another destination.
+    function buyTokens(address _to) crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable public {
         uint256 weiAmount = msg.value;
         uint256 tokens = weiAmount * getRate();
         weiRaised = weiRaised.add(weiAmount);
         wallet.transfer(weiAmount);
-        if (!token.transferFromCrowdfund(_to, tokens)) {
+        if (!token.moveAllocation(_to, tokens)) {
             revert();
         }
         TokenPurchase(_to, weiAmount, tokens);
     }
 
-    // Function to close the crowdfund. Any unsold FUEL will go to the platform to be sold at 1$
+    // Function to close the crowdfund. Only function to unlock the tokens
     function closeCrowdfund() external notBeforeCrowdfundEnds onlyOwner returns (bool success) {
-        AmountRaised(wallet, weiRaised);
-        token.finalizeCrowdfund();
+        require(crowdfundFinalized == false);
+        address addr;
+        uint256 amount;
+        uint256 timelock;
+        (addr, amount, timelock) = token.allocations(this);
+        if (amount > 0) {
+            // Transfer all of the tokens out to the final address (if burning, send to 0x0)
+            if (!token.moveAllocation(finalAddress, amount)) {
+                revert();
+            }
+        }
+        // Unlock the tokens
+        if (!token.unlockTokens()) {
+            revert();
+        }
+        crowdfundFinalized = true;
         return true;
     }
 
 /////////////////////// CONSTANT FUNCTIONS ///////////////////////
 
     // Returns FUEL disbursed per 1 ETH depending on current time
-    function getRate() public constant returns (uint price) {
+    function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
+
+    /*
+    ** pseudo-code
+        for var i := 0 ; i < len(prices); i++ {
+            if i == 0 {
+                `if (now > (startsAt + len(prices) weeks)) {
+                    return prices[i];
+                } `
+            } else if i < len(prices) -2 {
+                `else if (now > (startsAt + len(prices) weeks)) {
+                    return prices[i];
+                } `
+            } else {
+                `else {
+                    return prices[i];
+                }`
+            }
+
+        }
+            `
+     */
         if (now > (startsAt + 3 weeks)) {
            return 1275; // week 4
         } else if (now > (startsAt + 2 weeks)) {
@@ -103,9 +153,8 @@ contract Crowdfund is NonZero, Ownable {
         }
     }
 
-    // To contribute, send a value transaction to the Crowdfund Address.
-    // Please include at least 100 000 gas.
-    function () payable  public {
+    // To contribute, send a value transaction to the Crowdfund Address. Please include at least 100 000 gas.
+    function () payable external {
         buyTokens(msg.sender);
     }
 }
