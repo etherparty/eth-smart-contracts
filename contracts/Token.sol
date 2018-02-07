@@ -1,8 +1,8 @@
 pragma solidity ^0.4.15;
 
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "./zeppelin-solidity/SafeMath.sol";
+import "./zeppelin-solidity/Ownable.sol";
+import "./zeppelin-solidity/StandardToken.sol";
 
 contract Token is StandardToken, Ownable {
 
