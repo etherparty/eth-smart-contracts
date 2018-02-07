@@ -1,11 +1,11 @@
 pragma solidity ^0.4.15;
 
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./zeppelin-solidity/SafeMath.sol";
+import "./zeppelin-solidity/CanReclaimToken.sol";
 import "./helpers/NonZero.sol";
 import "./Token.sol";
 
-contract Crowdfund is NonZero, Ownable {
+contract Crowdfund is NonZero, CanReclaimToken {
 
     using SafeMath for uint;
 
