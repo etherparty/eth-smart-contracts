@@ -37,9 +37,11 @@ contract Crowdfund is NonZero, Ownable {
 
     uint256 public crowdfundLength; // {{.CrowdfundLength}}
 
-    uint256 totalWeeks = crowdfundLength / 1 weeks;
+    uint256 totalDays = crowdfundLength / 1 days;
 
-    uint256[10] public rateArray = [3000, 2250, 1700, 1275]; //  {{.RateArray}}
+    uint256[10] public rateLevel = [0, 3, 5, 7, totalDays]; //  {{.RateLevel}}
+
+    mapping (uint256 => uint256) public rateMap; // {{.RateMap}}
 
 /////////////////////// EVENTS ///////////////////////
 
@@ -141,10 +143,17 @@ contract Crowdfund is NonZero, Ownable {
      * @return uint The price of the token rate per 1 ETH
      */
     function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
-        uint256 weeksLeft = (crowdfundLength - now) / 1 weeks;
+        uint256 daysPassed = totalDays - (crowdfundLength - now) / 1 days;
+        uint8 i;
+
+        for (i = 0; i < rateLevel.length; i++) {
+          if (daysPassed < rateLevel[i]) {
+            break;
+          }
+        }
 
         // currentWeek = totalWeeks - weeksLeft
-        return rateArray[totalWeeks - weeksLeft];
+        return rateMap[rateLevel[--i]];
 
     }
 
