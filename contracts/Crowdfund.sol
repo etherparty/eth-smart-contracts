@@ -37,6 +37,8 @@ contract Crowdfund is NonZero, Ownable {
 
     uint256 public crowdfundLength; // {{.CrowdfundLength}}
 
+    uint256 totalWeeks = crowdfundLength / 1 weeks;
+
     uint256[10] public rateArray = [3000, 2250, 1700, 1275]; //  {{.RateArray}}
 
 /////////////////////// EVENTS ///////////////////////
@@ -122,8 +124,7 @@ contract Crowdfund is NonZero, Ownable {
 
     // Returns FUEL disbursed per 1 ETH depending on current time
     function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
-        uint totalWeeks = crowdfundLength / 1 weeks;
-        uint weeksLeft = (crowdfundLength - now) / 1 weeks;
+        uint256 weeksLeft = (crowdfundLength - now) / 1 weeks;
 
         // currentWeek = totalWeeks - weeksLeft
         return rateArray[totalWeeks - weeksLeft];
