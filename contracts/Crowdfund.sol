@@ -113,7 +113,10 @@ contract Crowdfund is NonZero, Ownable {
         TokenPurchase(_to, weiAmount, tokens);
     }
 
-    // Function to close the crowdfund. Only function to unlock the tokens
+    /**
+     * @dev Closes the crowdfund only after the crowdfund ends and by the owner
+     * @return bool True if closed successfully else false
+     */
     function closeCrowdfund() external notBeforeCrowdfundEnds onlyOwner returns (bool success) {
         require(crowdfundFinalized == false);
         var (,amount,) = token.allocations(this);
@@ -133,7 +136,10 @@ contract Crowdfund is NonZero, Ownable {
 
 /////////////////////// CONSTANT FUNCTIONS ///////////////////////
 
-    // Returns FUEL disbursed per 1 ETH depending on current time
+    /**
+     * @dev Returns token rate depending on the current time
+     * @return uint The price of the token rate per 1 ETH
+     */
     function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
         uint256 weeksLeft = (crowdfundLength - now) / 1 weeks;
 
@@ -142,7 +148,12 @@ contract Crowdfund is NonZero, Ownable {
 
     }
 
-    // Function to send Tokens to presale investors
+    /**
+     * @dev Sends presale tokens to any contributors when called by the owner
+     * @param _batchOfAddresses An array of presale contributor addresses
+     * @param _amountOfTokens An array of tokens bought synchronized with the index value of _batchOfAddresses
+     * @return bool True if successful else false
+     */
     function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyOwner returns (bool success) {
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
             deliverPresaleToken(_batchOfAddresses[i], _amountOfTokens[i]);
@@ -150,6 +161,11 @@ contract Crowdfund is NonZero, Ownable {
         return true;
     }
 
+    /**
+     * @dev Sends token to presale address
+     * @param _accountHolder Account address to send token to
+     * @param _amountOfTokens Amount of tokens to send
+     */
     // All presale purchases will be delivered.
     function deliverPresaleToken(address _accountHolder, uint256 _amountOfTokens) internal {
         if (!token.moveAllocation(_accountHolder, _amountOfTokens)) {
@@ -157,14 +173,18 @@ contract Crowdfund is NonZero, Ownable {
         }
     }
 
+    /**
+     * @dev Called by the owner to kill the contact once the crowdfund is finished and there are no tokens left
+     */
     function kill() onlyOwner external {
         var (,amount,) = token.allocations(this);
         require(crowdfundFinalized == true && amount == 0);
         selfdestruct(owner);
     }
 
-
-    // To contribute, send a value transaction to the Crowdfund Address. Please include at least 100 000 gas.
+    /**
+     * @dev Allows for users to send ETH to buy tokens
+     */
     function () payable external {
         buyTokens(msg.sender);
     }
