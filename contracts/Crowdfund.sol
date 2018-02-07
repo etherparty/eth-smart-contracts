@@ -60,13 +60,15 @@ contract Crowdfund is NonZero, Ownable {
 
 /////////////////////// CROWDFUND FUNCTIONS ///////////////////////
     // Constructor
-    function Crowdfund() internal {
+    function Crowdfund(address _owner) internal {
 
         if (!userActivated) {
             // Either we start the crowdfund now, or later on.
             startCrowdfund();
         }
-        token = new Token(msg.sender); // Create new Token
+        // Change the owner to the owner address.
+        owner = _owner;
+        token = new Token(owner); // Create new Token
     }
 
     function startCrowdfund() public { // Either called by the owner, or the contract itself
@@ -99,10 +101,7 @@ contract Crowdfund is NonZero, Ownable {
     // Function to close the crowdfund. Only function to unlock the tokens
     function closeCrowdfund() external notBeforeCrowdfundEnds onlyOwner returns (bool success) {
         require(crowdfundFinalized == false);
-        address addr;
-        uint256 amount;
-        uint256 timelock;
-        (addr, amount, timelock) = token.allocations(this);
+        var (,amount,) = token.allocations(this);
         if (amount > 0) {
             // Transfer all of the tokens out to the final address (if burning, send to 0x0)
             if (!token.moveAllocation(finalAddress, amount)) {
@@ -121,6 +120,15 @@ contract Crowdfund is NonZero, Ownable {
 
     // Returns FUEL disbursed per 1 ETH depending on current time
     function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
+        if (now > (startsAt + 3 weeks)) {
+           return 1275; // week 4
+        } else if (now > (startsAt + 2 weeks)) {
+           return 1700; // week 3
+        } else if (now > (startsAt + 1 weeks)) {
+           return 2250; // week 2
+        } else {
+           return 3000; // week 1
+        }
 
     /*
     ** pseudo-code
@@ -142,16 +150,29 @@ contract Crowdfund is NonZero, Ownable {
         }
             `
      */
-        if (now > (startsAt + 3 weeks)) {
-           return 1275; // week 4
-        } else if (now > (startsAt + 2 weeks)) {
-           return 1700; // week 3
-        } else if (now > (startsAt + 1 weeks)) {
-           return 2250; // week 2
-        } else {
-           return 3000; // week 1
+    }
+
+    // Function to send Tokens to presale investors
+    function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyOwner returns (bool success) {
+        for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
+            deliverPresaleToken(_batchOfAddresses[i], _amountOfTokens[i]);
+        }
+        return true;
+    }
+
+    // All presale purchases will be delivered.
+    function deliverPresaleToken(address _accountHolder, uint256 _amountOfTokens) internal {
+        if (!token.moveAllocation(_accountHolder, _amountOfTokens)) {
+            revert();
         }
     }
+
+    function kill() onlyOwner external {
+        var (,amount,) = token.allocations(this);
+        require(crowdfundFinalized == true && amount == 0);
+        selfdestruct(owner);
+    }
+
 
     // To contribute, send a value transaction to the Crowdfund Address. Please include at least 100 000 gas.
     function () payable external {
