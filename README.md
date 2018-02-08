@@ -60,7 +60,23 @@ Here is a list of all requirements needed for the token creator contract
 
 `./node_modules/.bin/solidity-coverage`
 
-- Oyente
+- Oyente https://github.com/melonproject/oyente
 
 `docker run -i -t -v `pwd`/contracts:/oyente/contracts luongnguyen/oyente`
 `cd /oyente/oyente && python oyente.py -s contracts/Crowdfund.sol`
+
+- Mythril
+
+`pip3 install mythril`
+
+Get the function signatures
+
+```
+ mkdir ~/.mythril
+ cd ~/.mythril
+ wget https://raw.githubusercontent.com/b-mueller/mythril/master/signatures.json
+ ```
+
+
+ `myth -x myContract.sol`
+

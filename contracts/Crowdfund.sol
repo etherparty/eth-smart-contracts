@@ -39,7 +39,14 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
     uint256 totalDays = crowdfundLength / 1 days;
 
-    uint256[10] public rateLevel = [0, 3, 5, 7, totalDays]; //  {{.RateLevel}}
+    struct rate {
+        uint256 price;
+        uint8 amountOfDays;
+    }
+
+    // here we are saying that the rate is 1ETH=1000 Tokens for 3 days, then 750 from days 3 to day 5 etc
+    rate[10] public rates = [rate(1000, 3), rate(750, 5), rate(500, 7), rate(250, 9)]; //  {{.RateLevel}}
+
 
     mapping (uint256 => uint256) public rateMap; // {{.RateMap}}
 
@@ -144,16 +151,15 @@ contract Crowdfund is NonZero, CanReclaimToken {
      */
     function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
         uint256 daysPassed = totalDays - (crowdfundLength - now) / 1 days;
-        uint8 i;
 
-        for (i = 0; i < rateLevel.length; i++) {
-          if (daysPassed < rateLevel[i]) {
+        for (uint8 i = 0; i < rates.length; i++) {
+        // if the days passed since the start is below the amountOfdays we use the last rate
+          if (daysPassed < rates[i].amountOfDays) {
             break;
           }
         }
 
-        // currentWeek = totalWeeks - weeksLeft
-        return rateMap[rateLevel[--i]];
+        return rateMap[rates[--i].price];
 
     }
 
