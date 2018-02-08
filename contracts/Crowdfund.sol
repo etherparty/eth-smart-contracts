@@ -45,10 +45,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
     }
 
     // here we are saying that the rate is 1ETH=1000 Tokens for 3 days, then 750 from days 3 to day 5 etc
-    rate[10] public rates = [rate(1000, 3), rate(750, 5), rate(500, 7), rate(250, 9)]; //  {{.RateLevel}}
-
-
-    mapping (uint256 => uint256) public rateMap; // {{.RateMap}}
+    rate[10] public rates = [rate(1000, 3), rate(750, 5), rate(500, 7), rate(250, 9)]; //  {{.RateArray}}
 
 /////////////////////// EVENTS ///////////////////////
 
@@ -68,6 +65,11 @@ contract Crowdfund is NonZero, CanReclaimToken {
     // Ensure actions can only happen after crowdfund ends
     modifier notBeforeCrowdfundEnds() {
         require(now >= endsAt);
+        _;
+    }
+
+    modifier onlyBeforeCrowdfund() {
+        require(now <= startsAt);
         _;
     }
 
@@ -159,7 +161,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
           }
         }
 
-        return rateMap[rates[--i].price];
+        return rates[--i].price;
 
     }
 
@@ -169,7 +171,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _amountOfTokens An array of tokens bought synchronized with the index value of _batchOfAddresses
      * @return bool True if successful else false
      */
-    function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyOwner returns (bool success) {
+    function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
             deliverPresaleToken(_batchOfAddresses[i], _amountOfTokens[i]);
         }
