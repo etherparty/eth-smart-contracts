@@ -12,14 +12,12 @@ contract Token is StandardToken, Ownable {
 
 
 /////////////////////// TOKEN INFORMATION ///////////////////////
-    string public constant name = "NAME"; //{{.Name}} NAME CAN BE CHANGED 20 chars max?
-    string public constant symbol = "SYMBOL"; //{{.Symbol}} SYMBOL CAN BE CHANGED 3-5 symbols
-    uint256 private constant totSup = 100000; // {.TotalSupply} can go up to ??
+    string public name = "NAME"; //{{.Name}} NAME CAN BE CHANGED 20 chars max?
+    string public symbol = "SYMBOL"; //{{.Symbol}} SYMBOL CAN BE CHANGED 3-5 symbols
     uint8 public decimals = 18; //{{.Decimal}} CAN BE CHANGED 0 --> 18
-    uint256 public crowdfundLength = 10000; // {{.CrowdfundLength}}
+    uint256 private crowdfundLength; // {{.CrowdfundLength}}
 
     struct allocation {
-        address owner;
         uint256 balance;
         uint256 timeLock;
     }
@@ -67,28 +65,31 @@ contract Token is StandardToken, Ownable {
     }
 
 /////////////////////// TOKEN FUNCTIONS ///////////////////////
-
+    // We pass in only what we need (like length of crowdfund and the allocations)
     /**
      * @dev Constructor
      * @param _owner The address of the contract owner
      */
-    function Token(address _owner) public {
-        totalSupply_ = totSup; // For the totalSupply() function upstream
-        owner = _owner;
-    /*
-        type Allocation struct { Address: addr, Balance: balance, Timelock: timelock}
-        .... get the []Allocation struct
-        for _, allocation := range allocations {
-        `allocations[allocation.Address] = allocation(allocation.Address, allocation.Balance, allocation.Timelock);
-        crowdfundSupply -= allocation.Balance`
-        }
-        crowdfundSupply = totalSupply_;
-        assert(crowdfundSupply == {{.CrowdfundSupply}});
+    function Token(
+        address _owner,
+        uint256 _crowdfundLength,
+        address[] memory allocAddresses,
+        uint256[] memory allocBalances,
+        uint256[] memory timelocks) public {
 
-        We can do assertions like this on the constructor to double check all
-    */
-        allocations[msg.sender] = allocation(msg.sender, crowdfundSupply, 0); // Crowdfund is an allocation like any other (msg.sender is the crowdfund contract)
-        // One side effect is that we cannot see the contracts "balance" directly on Etherscan
+        require(allocAddresses.length == allocBalances.length && allocAddresses.length == timelocks.length);
+        owner = _owner;
+        crowdfundLength = _crowdfundLength;
+
+        for (uint8 i = 0; i < allocBalances.length; i++) {
+            if(allocAddresses[i] == address(0)) {
+                crowdfundSupply = allocBalances[i];
+                allocAddresses[i] = msg.sender;
+            }
+            allocations[allocAddresses[i]] = allocation(allocBalances[i], timelocks[i]);
+        }
+
+        allocations[msg.sender] = allocation(crowdfundSupply, 0); // Crowdfund is an allocation like any other (msg.sender is the crowdfund contract)
 
         crowdfundAddress = msg.sender;
     }
@@ -100,7 +101,6 @@ contract Token is StandardToken, Ownable {
      * @return bool True if successful else false
      */
     function moveAllocation(address _to, uint256 _amount) public returns(bool success) {
-        // Add checks on _to address
         require(allocations[msg.sender].timeLock < now);
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount); // will throw if goes less than 0
         balances[_to] = balances[_to].add(_amount);

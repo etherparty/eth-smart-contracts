@@ -11,8 +11,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
 
-    // Address of the deployed FUEL Token contract
-    address public tokenAddress;
     // Amount of wei currently raised
     uint256 public weiRaised = 0;
     // UNIX timestamp of when the crowdfund starts
@@ -28,16 +26,15 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
 
     // Our own vars
-    // Whether the user wants to start the crowdfund
-    bool private userActivated = false; // {{.UserActivated}}
     // Address of secure wallet to send crowdfund contributions to
-    address public wallet = 0x0; // {{.WalletAddress}}
+    address public wallet; // {{.WalletAddress}}
 
-    address public finalAddress = 0x0; // {{.FinalAddress}}
+    address public forwardTokensTo; // {{.forwardTokensTo}}
 
     uint256 public crowdfundLength; // {{.CrowdfundLength}}
 
-    uint256 totalDays = crowdfundLength / 1 days;
+    uint256 public totalDays;
+
 
     struct rate {
         uint256 price;
@@ -45,12 +42,10 @@ contract Crowdfund is NonZero, CanReclaimToken {
     }
 
     // here we are saying that the rate is 1ETH=1000 Tokens for 3 days, then 750 from days 3 to day 5 etc
-    rate[10] public rates = [rate(1000, 3), rate(750, 5), rate(500, 7), rate(250, 9)]; //  {{.RateArray}}
+    rate[] public rates;
 
 /////////////////////// EVENTS ///////////////////////
 
-    // Emitted upon owner changing the wallet address
-    event WalletAddressChanged(address _wallet);
     // Emmitted upon purchasing tokens
     event TokenPurchase(address indexed purchaser, uint256 value, uint256 amount);
 
@@ -73,40 +68,85 @@ contract Crowdfund is NonZero, CanReclaimToken {
         _;
     }
 
+    modifier nonZeroAddress(address _address) {
+        require(_address != address(0));
+        _;
+    }
+
 /////////////////////// CROWDFUND FUNCTIONS ///////////////////////
     /**
      * @dev Constructor
      * @param _owner The address of the contract owner
      */
-    function Crowdfund(address _owner) internal {
+    function Crowdfund(
+        address _owner,
+        uint8[] memory amountOfDays,
+        uint256[] memory prices,
+        address _wallet,
+        address _forwardTokensTo,
+        bool manualActivation,
+        uint256 _activationDate,
+        uint256 _crowdfundLength,
+        address[] memory _allocAddresses,
+        uint256[] memory _allocBalances,
+        uint256[] memory _timelocks
+        ) public {
 
-        if (!userActivated) {
-            // Either we start the crowdfund now, or later on.
-            startCrowdfund();
+
+        assert(amountOfDays.length == prices.length && prices.length < 10);
+        for (uint8 i = 0; i < amountOfDays.length; i++) {
+            rates.push(rate(prices[i], amountOfDays[i]));
+        }
+
+        if (!manualActivation) {
+            // Either we start the crowdfund now (or at a set time later), or call the startCrowdfund contract manually in the future.
+            startsAt = _activationDate;
+            if (startsAt == 0) {
+                startsAt = now;
+            }
+            endsAt = startsAt + _crowdfundLength;
+            isReadyToActivate = true;
+            assert(startsAt >= now && endsAt > startsAt );
         }
         // Change the owner to the owner address.
         owner = _owner;
-        token = new Token(owner); // Create new Token
+        token = new Token(owner, _crowdfundLength, _allocAddresses, _allocBalances, _timelocks); // Create new Token
+
+        wallet = _wallet;
+        forwardTokensTo = _forwardTokensTo;
+        crowdfundLength = _crowdfundLength;
+        totalDays = crowdfundLength / 1 days;
     }
 
     /**
      * @dev Called by the owner or the contract at the start of the crowdfund
      */
-    function startCrowdfund() public {
-        require(isReadyToActivate == false && (msg.sender == address(this) || msg.sender == owner));
-            startsAt = now;
-            endsAt = startsAt + crowdfundLength;
-            isReadyToActivate = true;
-            assert(startsAt > now && startsAt < endsAt && endsAt > now);
+    function startCrowdfund() public returns(bool) {
+        require(msg.sender == owner);
+        require(isReadyToActivate == false);
+        require(endsAt == 0);
+        startsAt = now;
+        // Sending in 0 will make it so you start the crowdfund now.
+        endsAt = startsAt + crowdfundLength;
+        isReadyToActivate = true;
+        assert(startsAt >= now && endsAt > startsAt);
+        return true;
     }
 
     /**
      * @dev Change the main contribution wallet
      * @param _wallet The new contribution wallet address
      */
-    function changeWalletAddress(address _wallet) onlyOwner public {
+    function changeWalletAddress(address _wallet) onlyOwner nonZeroAddress(_wallet) public {
         wallet = _wallet;
-        WalletAddressChanged(_wallet);
+    }
+
+    /**
+     * @dev Change the main contribution wallet
+     * @param _forwardTokensTo The new contribution wallet address
+     */
+    function changeForwardAddress(address _forwardTokensTo) onlyOwner nonZeroAddress(_forwardTokensTo) public {
+        forwardTokensTo = _forwardTokensTo;
     }
 
     /**
@@ -130,10 +170,10 @@ contract Crowdfund is NonZero, CanReclaimToken {
      */
     function closeCrowdfund() external notBeforeCrowdfundEnds onlyOwner returns (bool success) {
         require(crowdfundFinalized == false);
-        var (,amount,) = token.allocations(this);
+        var (amount,) = token.allocations(this);
         if (amount > 0) {
             // Transfer all of the tokens out to the final address (if burning, send to 0x0)
-            if (!token.moveAllocation(finalAddress, amount)) {
+            if (!token.moveAllocation(forwardTokensTo, amount)) {
                 revert();
             }
         }
@@ -193,8 +233,8 @@ contract Crowdfund is NonZero, CanReclaimToken {
     /**
      * @dev Called by the owner to kill the contact once the crowdfund is finished and there are no tokens left
      */
-    function kill() onlyOwner external {
-        var (,amount,) = token.allocations(this);
+    function kill() external onlyOwner {
+        var (amount,) = token.allocations(this);
         require(crowdfundFinalized == true && amount == 0);
         selfdestruct(owner);
     }
