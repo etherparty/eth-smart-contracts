@@ -20,10 +20,10 @@ contract('Crowdfund', function(accounts) {
 
 
   it("Init: The contract is initialized with the right variables", async () =>  {
-
+    Crowdfund.class_defaults.gas = 4000000
     const crowdfund = await Crowdfund.new(owner, [3, 4, 5, 8], [1000, 750, 500, 250],receivingAccount,
-      forwardAddress, false, 0, twentyEightDaysInSeconds, [forwardAddress, customer5,customer4, customer2, customer1, "0x0"], [100000, 100,1, 2, 3, 4], [0, 100000000, 1212, 3332, 33233, 0], {from: owner, gas: gasAmount})
-    const token = await Token.at(await crowdfund.token());
+      forwardAddress, false, 0, twentyEightDaysInSeconds, [forwardAddress, customer5,customer4, customer2, customer1, "0x0"], [100000, 100,1, 2, 3, 4], [0, 100000000, 1212, 3332, 33233, 0], {from: owner, gas: 4400000})
+      const token = await Token.at(await crowdfund.token());
 
     const weiRaised = await crowdfund.weiRaised();
     const crowdfundFinalized = await crowdfund.crowdfundFinalized();
