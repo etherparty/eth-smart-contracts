@@ -1,28 +1,26 @@
 pragma solidity ^0.4.15;
 
-import "./zeppelin-solidity/SafeMath.sol";
-import "./zeppelin-solidity/Ownable.sol";
-import "./zeppelin-solidity/StandardToken.sol";
+import "./library/SafeMath.sol";
+import "./library/Ownable.sol";
+import "./library/StandardToken.sol";
 
 contract Token is StandardToken, Ownable {
 
     using SafeMath for uint;
 
-// Maybe declare all the vars we will be using on the top level here along with their visibility
-
-
 /////////////////////// TOKEN INFORMATION ///////////////////////
-    string public name = "NAME"; //{{.Name}} NAME CAN BE CHANGED 20 chars max?
+    string public name = "NAME"; //{{.Name}} NAME CAN BE CHANGED 20 chars max
     string public symbol = "SYMBOL"; //{{.Symbol}} SYMBOL CAN BE CHANGED 3-5 symbols
     uint8 public decimals = 18; //{{.Decimal}} CAN BE CHANGED 0 --> 18
-    uint256 private crowdfundLength; // {{.CrowdfundLength}}
+    uint256 private crowdfundLength;
 
+    // An allocation has a total balance and potentially a timelock (0 means no timelock)
     struct allocation {
         uint256 balance;
         uint256 timeLock;
     }
 
-    // Mapping to keep allocations
+    // Allocation keeps track of all the different allocations that the user created. Including crowdfund
     mapping (address => allocation) public allocations;
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
@@ -31,7 +29,7 @@ contract Token is StandardToken, Ownable {
     uint256 public crowdfundSupply;
     // Crowdfund address
     address public crowdfundAddress;
-    // Tokens transfers are locked until the crowdfund is closed
+    // Tokens transfers are locked until the crowdfund is closed  ---- MAYBE CHANGE THIS
     bool tokensLocked = true;
 
 
@@ -40,6 +38,7 @@ contract Token is StandardToken, Ownable {
         require(tokensLocked == false);
         _;
     }
+
 /////////////////////// ERC20 FUNCTIONS ///////////////////////
 
     /**
@@ -71,27 +70,31 @@ contract Token is StandardToken, Ownable {
      * @param _owner The address of the contract owner
      */
     function Token(
-        address _owner,
-        uint256 _crowdfundLength,
-        address[] memory allocAddresses,
-        uint256[] memory allocBalances,
-        uint256[] memory timelocks) public {
+        address _owner,                     // Owner of the contract
+        uint256 _crowdfundLength,           // Length of the crowdfund
+        address[] memory allocAddresses,    // Allocation addresses
+        uint256[] memory allocBalances,     // Allocation balances
+        uint256[] memory timelocks          // Array of timelocks
+        ) public {
 
-        require(allocAddresses.length == allocBalances.length && allocAddresses.length == timelocks.length);
+        // Ensure that all three arrays have the same length and have a length cap of 10
+        require(allocAddresses.length == allocBalances.length && allocAddresses.length == timelocks.length && allocAddresses.length < 10);
         owner = _owner;
         crowdfundLength = _crowdfundLength;
-
+        crowdfundAddress = msg.sender;
+        // Go through every allocation, and add it in the allocations mapping
         for (uint8 i = 0; i < allocBalances.length; i++) {
-            if(allocAddresses[i] == address(0)) {
+            // As we don't know the crowdfund contract address beforehand, the 0x0 address will be the one telling us the crowdfund allocation
+            if (allocAddresses[i] == address(0)) {
+                // Msg.sender here is the Crowdfund contract, as it is the one creating this contract
+                allocAddresses[i] = crowdfundAddress;
+                // Add to the crowdfundSupply variable
                 crowdfundSupply = allocBalances[i];
-                allocAddresses[i] = msg.sender;
+                // The crowdfund allocation should not have a timelock
+                timelocks[i] = 0;
             }
             allocations[allocAddresses[i]] = allocation(allocBalances[i], timelocks[i]);
         }
-
-        allocations[msg.sender] = allocation(crowdfundSupply, 0); // Crowdfund is an allocation like any other (msg.sender is the crowdfund contract)
-
-        crowdfundAddress = msg.sender;
     }
 
     /**
@@ -101,8 +104,11 @@ contract Token is StandardToken, Ownable {
      * @return bool True if successful else false
      */
     function moveAllocation(address _to, uint256 _amount) public returns(bool success) {
+        // Needs to be without a timelock
         require(allocations[msg.sender].timeLock < now);
-        allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount); // will throw if goes less than 0
+        // This function can be called by anyone, but as soon as the allocation goes below 0, it will revert()
+        allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount);
+        // Add to the msg.sender's balance
         balances[_to] = balances[_to].add(_amount);
         Transfer(0x0, _to, _amount);
         return true;
@@ -113,6 +119,7 @@ contract Token is StandardToken, Ownable {
      * @return bool True if successful else false;
      */
     function unlockTokens() external returns (bool) {
+        // This is a 1 way function, tokens can only be in an unlocked state
         require(msg.sender == crowdfundAddress);
         tokensLocked = false;
         return true;

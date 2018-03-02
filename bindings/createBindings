@@ -1,0 +1,1 @@
+abigen --sol ../contracts/Crowdfund.sol --pkg bindings -out Crowdfund.go

@@ -45,10 +45,6 @@ Here is a list of all requirements needed for the token creator contract
 - A user should be able to create multiple allocations for his tokens, and every allocation should be able to vest for a variable amount of months.
 
 
-
-
-
-
 ##### Tools used:
 
 - Solium:
