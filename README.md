@@ -76,3 +76,7 @@ Get the function signatures
 
  `myth -x myContract.sol`
 
+ - Solidity flatenner
+
+ `solidity_flattener --output StandardTokenFlattened.sol StandardToken.sol`
+

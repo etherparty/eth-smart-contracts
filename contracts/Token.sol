@@ -30,7 +30,7 @@ contract Token is StandardToken, Ownable {
     // Crowdfund address
     address public crowdfundAddress;
     // Tokens transfers are locked until the crowdfund is closed  ---- MAYBE CHANGE THIS
-    bool tokensLocked = true;
+    bool public tokensLocked = true;
 
 
 /////////////////////// Modifiers ///////////////////////
@@ -47,7 +47,7 @@ contract Token is StandardToken, Ownable {
      * @param _amount The amount of tokens transfered
      * @return bool True if successful else false
      */
-    function transfer(address _to, uint256 _amount) onlyUnlocked public returns (bool success) {
+    function transfer(address _to, uint256 _amount) public onlyUnlocked returns (bool success) {
         return super.transfer(_to, _amount);
     }
 
@@ -58,7 +58,7 @@ contract Token is StandardToken, Ownable {
      * @param _amount The amount of tokens transfered
      * @return bool True if successful else false
      */
-    function transferFrom(address _from, address _to, uint256 _amount) onlyUnlocked public returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _amount) public onlyUnlocked returns (bool success) {
         return super.transferFrom(_from, _to, _amount);
 
     }
@@ -72,6 +72,7 @@ contract Token is StandardToken, Ownable {
     function Token(
         address _owner,                     // Owner of the contract
         uint256 _crowdfundLength,           // Length of the crowdfund
+        uint256 _totalSupply,           // Length of the crowdfund
         address[] memory allocAddresses,    // Allocation addresses
         uint256[] memory allocBalances,     // Allocation balances
         uint256[] memory timelocks          // Array of timelocks
@@ -80,21 +81,26 @@ contract Token is StandardToken, Ownable {
         // Ensure that all three arrays have the same length and have a length cap of 10
         require(allocAddresses.length == allocBalances.length && allocAddresses.length == timelocks.length && allocAddresses.length < 10);
         owner = _owner;
+        totalSupply_ = _totalSupply;
         crowdfundLength = _crowdfundLength;
         crowdfundAddress = msg.sender;
+        uint256 multiplier = 10**uint256(decimals);
         // Go through every allocation, and add it in the allocations mapping
+        uint256 totalTokens = 0;
         for (uint8 i = 0; i < allocBalances.length; i++) {
             // As we don't know the crowdfund contract address beforehand, the 0x0 address will be the one telling us the crowdfund allocation
             if (allocAddresses[i] == address(0)) {
                 // Msg.sender here is the Crowdfund contract, as it is the one creating this contract
                 allocAddresses[i] = crowdfundAddress;
                 // Add to the crowdfundSupply variable
-                crowdfundSupply = allocBalances[i];
+                crowdfundSupply = allocBalances[i].mul(multiplier);
                 // The crowdfund allocation should not have a timelock
                 timelocks[i] = 0;
             }
-            allocations[allocAddresses[i]] = allocation(allocBalances[i], timelocks[i]);
+            allocations[allocAddresses[i]] = allocation(allocBalances[i].mul(multiplier), timelocks[i]);
+            totalTokens = totalTokens.add(allocBalances[i]);
         }
+        assert(totalTokens == _totalSupply);
     }
 
     /**

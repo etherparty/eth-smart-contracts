@@ -78,9 +78,8 @@ contract Crowdfund is NonZero, CanReclaimToken {
         uint256[] memory prices,            // Array of the prices for each price epoch
         address _wallet,                    // Wallet address
         address _forwardTokensTo,           // Address to forward the tokens to
-        bool manualActivation,              // Whether a user wants to manually activate the crowdfund or mot
-        uint256 _activationDate,            // Date of activation of the crowdfund
-        uint256 _crowdfundLength,           // Length of the crowdfund
+        uint256 _totalDays,           // Length of the crowdfund in days
+        uint256 _totalSupply,               // Total Supply of the token
         address[] memory _allocAddresses,   // Array of allocation addresses
         uint256[] memory _allocBalances,    // Array of allocation balances
         uint256[] memory _timelocks         // Array of timelocks for all the allocations
@@ -90,8 +89,8 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // Change the owner to the owner address.
         owner = _owner;
         forwardTokensTo = _forwardTokensTo;
-        crowdfundLength = _crowdfundLength * 1 days;
-        totalDays = _crowdfundLength;
+        totalDays = _totalDays;
+        crowdfundLength = _totalDays.mul(1 days);
 
         // Ensure the prices per epoch passed in are the same length and limit the size of the array
         assert(amountOfDays.length == prices.length && prices.length < 10);
@@ -100,34 +99,21 @@ contract Crowdfund is NonZero, CanReclaimToken {
             rates.push(rate(prices[i], amountOfDays[i]));
         }
 
-        // if user does not want a manual activation
-        if (!manualActivation) {
-            // Either we start the crowdfund now (or at a set time later), or call the startCrowdfund contract manually in the future.
-            startsAt = _activationDate;
-            // If user passes in no start at date, then the crowdfund is immediately active
-            if (startsAt == 0) {
-                startsAt = now;
-            }
-            // Or the crowdfund is active after a little while
-            endsAt = startsAt + _crowdfundLength;
-            // Crowdfund is now activated
-            isActivated = true;
-            assert(startsAt >= now && endsAt > startsAt );
-        }
-        // Create the token contract
-        token = new Token(owner, _crowdfundLength, _allocAddresses, _allocBalances, _timelocks); // Create new Token
+        // // Create the token contract
+        token = new Token(owner, crowdfundLength, _totalSupply, _allocAddresses, _allocBalances, _timelocks); // Create new Token
 
     }
 
     /**
      * @dev Called by the owner or the contract at the start of the crowdfund
+     * @param _startDate The start date UNIX timestamp
      */
-    function startCrowdfund() public returns(bool) {
+    function startCrowdfund(uint256 _startDate) public returns(bool) {
         // require only the owner can start the crowdfund
         require(msg.sender == owner);
         // crowdfund cannot be already activated
         require(isActivated == false);
-        startsAt = now;
+        startsAt = _startDate;
         endsAt = startsAt + crowdfundLength;
         isActivated = true;
         assert(startsAt >= now && endsAt > startsAt);
