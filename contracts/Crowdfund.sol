@@ -5,6 +5,7 @@ import "./library/CanReclaimToken.sol";
 import "./library/NonZero.sol";
 import "./Token.sol";
 
+
 contract Crowdfund is NonZero, CanReclaimToken {
 
     using SafeMath for uint;
@@ -20,7 +21,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
     // Instance of the Fuel token contract
     Token public token;
     // Whether the crowdfund is in a "Ready to activate" state
-    bool private isActivated = false;
+    bool public isActivated = false;
     // Flag keeping track of crowdsale status. Ensures closeCrowdfund() and kill() can only be called once
     bool public crowdfundFinalized = false;
 

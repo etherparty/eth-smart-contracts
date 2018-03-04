@@ -9,6 +9,10 @@ contract('Crowdfund', function(accounts) {
     return new BigNumber(num).times(new BigNumber(10).pow(decimals));
   }
 
+  async function jumpToTheFuture(seconds) {
+    return web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [seconds], id: 0});
+  }
+
     const gasAmount = 6000000;
     const owner = accounts[0];
     const receivingAccount = accounts[1];
@@ -72,6 +76,7 @@ contract('Crowdfund', function(accounts) {
   });
 
   // Test startcrowdfund, happy and unhappy path
+  // rates per epoch
   // function changeForwardAddress(address _forwardTokensTo) public onlyOwner nonZeroAddress(_forwardTokensTo) {
   // function changeWalletAddress(address _wallet) public onlyOwner nonZeroAddress(_wallet) {
   // function buyTokens(address _to) public crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable {
