@@ -288,12 +288,154 @@ contract('Crowdfund', function(accounts) {
     assert.equal((await crowdfund.forwardTokensTo()), customer5, "New Forward should equal")
   });
 
+    it("BuyTokens() and function (): It should let a buyer buy tokens", async () =>  {
+      const wallet = '0x99edCE9CeC1296590B67402A73c780bAeB51c4ad'
+      const crowdfund = await Crowdfund.new(
+        owner,
+        epochs,
+        prices,
+        receivingAccount,
+        forwardAddress,
+        totalDays,
+        totalSupply,
+        allocationAddresses,
+        allocationBalances,
+        allocationTimelocks,
+        {from: owner}
+      )
+    const token = await Token.at(await crowdfund.token());
+
+    // Buy tokens when not active
+    // Buying tokens should fail
+    try {
+      await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('1', 'ether')} )
+    } catch(e) {
+      ensureException(e)
+    }
+    // Start the crowdfund now
+    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock()+ 100, {from: owner})
+
+    await jumpToTheFuture(500)
+    await crowdfund.changeWalletAddress(wallet, {from: owner})
+
+    assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+
+    // Buy token when active using buyTokens()
+    await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('1', 'ether')} )
+    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal")
+    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)), true, "Should equal")
+
+    // Buy token when active using function()
+    await web3.eth.sendTransaction({from: customer1, to: crowdfund.address, value: web3.toWei('1', 'ether')} )
+    assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(2, 18)), true, "Should equal")
+    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(2, 18)), true, "Should equal")
+
+    // Buy token when active using function() and zero value
+      try {
+        await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('0', 'ether')} )
+      } catch(e) {
+        ensureException(e)
+      }
+
+      // Buy token when active using buyTokens() and zero value
+      try {
+        await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('0', 'ether')} )
+      } catch(e) {
+        ensureException(e)
+      }
+
+      await jumpToTheFuture(twentyEightDaysInSeconds + 200)
+      await crowdfund.changeWalletAddress(owner, {from: owner})
+
+      // Buy tokens after crowdfund is done but not closed
+      try {
+        await crowdfund.buyTokens(customer3, {from: customer3, value: web3.toWei('0', 'ether')} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
+
+      // Buy tokens after crowdfund is closed
+      await crowdfund.closeCrowdfund({from: owner})
+      try {
+        await crowdfund.buyTokens(customer3, {from: customer3, value: web3.toWei('0', 'ether')} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
+    });
+
+    it("closeCrowdfund(): It should let me close the crowdfund at the appropriate time", async () =>  {
+      const crowdfund = await Crowdfund.new(
+        owner,
+        epochs,
+        prices,
+        receivingAccount,
+        forwardAddress,
+        totalDays,
+        totalSupply,
+        allocationAddresses,
+        allocationBalances,
+        allocationTimelocks,
+        {from: owner}
+      )
+      const token = await Token.at(await crowdfund.token());
 
 
-  // function buyTokens(address _to) public crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable {
-  // function closeCrowdfund() external onlyAfterCrowdfund onlyOwner returns (bool success) {
-  // function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
+      // Close crowdfund before crowdfund starts
+      try {
+        await crowdfund.closeCrowdfund({from: owner} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await crowdfund.crowdfundFinalized()), false, "Should equal")
+      assert.equal((await token.tokensLocked()), true, "Should be locked")
+
+      await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock()+ 100, {from: owner})
+
+      await jumpToTheFuture(500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+      // Close crowdfund during crowdfund
+      try {
+        await crowdfund.closeCrowdfund({from: owner} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await crowdfund.crowdfundFinalized()), false, "Should equal")
+      assert.equal((await token.tokensLocked()), true, "Should be locked")
+
+      await jumpToTheFuture(twentyEightDaysInSeconds + 500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+
+      // Close crowdfund when crowdfund is done by customer1
+      try {
+        await crowdfund.closeCrowdfund({from: customer1} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await crowdfund.crowdfundFinalized()), false, "Should equal")
+      assert.equal((await token.tokensLocked()), true, "Should be locked")
+
+      // Close crowdfund when crowdfund is done by owner
+      await crowdfund.closeCrowdfund({from: owner})
+      assert.equal((await crowdfund.crowdfundFinalized()), true, "Should be closed")
+      assert.equal((await token.tokensLocked()), false, "Should be unlocked")
+      assert.equal((await token.balanceOf(forwardAddress)).eq(bigNumberize(allocationBalances[allocationBalances.length -1], 18)), true, "Should receive all of the tokens")
+
+      // Retry closing the crowdfund
+      try {
+        await crowdfund.closeCrowdfund({from: owner} )
+      } catch(e) {
+        ensureException(e)
+      }
+  });
+
+
+
   // function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
   // function kill() external onlyOwner {
-  // function () external payable {
 });
