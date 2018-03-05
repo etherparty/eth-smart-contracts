@@ -45,7 +45,6 @@ contract('Crowdfund', function(accounts) {
     const totalSupply = 1000000
 
     it("Init: The contract is initialized with the right variables", async () =>  {
-      Crowdfund.class_defaults.gas = 4000000
       const crowdfund = await Crowdfund.new(
         owner,
         epochs,
@@ -57,7 +56,7 @@ contract('Crowdfund', function(accounts) {
         allocationAddresses,
         allocationBalances,
         allocationTimelocks,
-        {from: owner, gas: 5000000}
+        {from: owner}
       )
     const token = await Token.at(await crowdfund.token());
 
@@ -98,7 +97,6 @@ contract('Crowdfund', function(accounts) {
   });
 
     it("Schedule and Reschedule crowdfund: It should schedule the crowdfund and not let me reschedule after the crowdfund is active", async () =>  {
-      Crowdfund.class_defaults.gas = 4000000
       const crowdfund = await Crowdfund.new(
         owner,
         epochs,
@@ -110,7 +108,7 @@ contract('Crowdfund', function(accounts) {
         allocationAddresses,
         allocationBalances,
         allocationTimelocks,
-        {from: owner, gas: 5000000}
+        {from: owner}
       )
     const token = await Token.at(await crowdfund.token());
 
@@ -193,7 +191,6 @@ contract('Crowdfund', function(accounts) {
   });
 
     it("Rates per epoch: It should return the right price when buying tokens", async () =>  {
-      Crowdfund.class_defaults.gas = 4000000
       const crowdfund = await Crowdfund.new(
         owner,
         epochs,
@@ -205,7 +202,7 @@ contract('Crowdfund', function(accounts) {
         allocationAddresses,
         allocationBalances,
         allocationTimelocks,
-        {from: owner, gas: 5000000}
+        {from: owner}
       )
     const token = await Token.at(await crowdfund.token());
 
@@ -242,11 +239,57 @@ contract('Crowdfund', function(accounts) {
       await crowdfund.changeWalletAddress(owner, {from: owner})
     }
 
+    // 100 Days in the future
+    await jumpToTheFuture(100 * 24*60*60 + 5000)
+    // to adjust the next block
+    await crowdfund.changeWalletAddress(owner, {from: owner})
+
+    assert.equal((await crowdfund.getRate()).eq(bigNumberize(0, 0)), true, "Should equal 0")
+
 
   });
 
-  // function changeForwardAddress(address _forwardTokensTo) public onlyOwner nonZeroAddress(_forwardTokensTo) {
-  // function changeWalletAddress(address _wallet) public onlyOwner nonZeroAddress(_wallet) {
+    it("Change Forward and Wallet Address: It should let only the owner to change those addresses", async () =>  {
+      const crowdfund = await Crowdfund.new(
+        owner,
+        epochs,
+        prices,
+        receivingAccount,
+        forwardAddress,
+        totalDays,
+        totalSupply,
+        allocationAddresses,
+        allocationBalances,
+        allocationTimelocks,
+        {from: owner}
+      )
+    const token = await Token.at(await crowdfund.token());
+
+    // Anyone else is trying to change the wallet address
+    try {
+      await crowdfund.changeWalletAddress(owner, {from: customer1})
+    } catch(e) {
+      ensureException(e)
+    }
+    // Same for forward address
+    try {
+      await crowdfund.changeForwardAddress(owner, {from: customer1})
+    } catch(e) {
+      ensureException(e)
+    }
+
+    assert.equal((await crowdfund.wallet()), receivingAccount, "Wallet should equal")
+    assert.equal((await crowdfund.forwardTokensTo()), forwardAddress, "Forward should equal")
+
+    await crowdfund.changeWalletAddress(customer4, {from: owner})
+    await crowdfund.changeForwardAddress(customer5, {from: owner})
+
+    assert.equal((await crowdfund.wallet()), customer4, "New Wallet should equal")
+    assert.equal((await crowdfund.forwardTokensTo()), customer5, "New Forward should equal")
+  });
+
+
+
   // function buyTokens(address _to) public crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable {
   // function closeCrowdfund() external onlyAfterCrowdfund onlyOwner returns (bool success) {
   // function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds

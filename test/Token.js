@@ -48,7 +48,7 @@ contract('Token', function(accounts) {
 
 
   it("Init: The contract is initialized with the right variables", async () =>  {
-    Crowdfund.class_defaults.gas = 4000000
+    // Crowdfund.class_defaults
     const crowdfund = await Crowdfund.new(
       owner,
       epochs,
@@ -60,7 +60,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       allocationTimelocks,
-      {from: owner, gas: 5000000}
+      {from: owner}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -104,7 +104,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       allocationTimelocks,
-      {from: owner, gas: 5000000}
+      {from: owner}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -129,6 +129,8 @@ contract('Token', function(accounts) {
     }
     // Jump in the future
     await jumpToTheFuture(totalDays*24*60*60 + 20000)
+    await crowdfund.changeWalletAddress(owner, {from: owner})
+
     // close the crowdfund
     await crowdfund.closeCrowdfund({from: owner})
 
@@ -137,6 +139,8 @@ contract('Token', function(accounts) {
     assert.equal(await token.tokensLocked(), false, "Tokens should be unlocked")
 
     await jumpToTheFuture(20000)
+    await crowdfund.changeWalletAddress(owner, {from: owner})
+
 
     await token.transfer(customer1, web3.toWei(2, 'ether'), {from: owner})
 
@@ -160,7 +164,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       allocationTimelocks,
-      {from: owner, gas: 5000000}
+      {from: owner}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -186,6 +190,8 @@ contract('Token', function(accounts) {
     }
     // Jump in the future
     await jumpToTheFuture(totalDays*24*60*60 + 20000)
+    await crowdfund.changeWalletAddress(owner, {from: owner})
+
     // close the crowdfund
     await crowdfund.closeCrowdfund({from: owner})
 
@@ -194,6 +200,8 @@ contract('Token', function(accounts) {
     assert.equal(await token.tokensLocked(), false, "Tokens should be unlocked")
 
     await jumpToTheFuture(20000)
+    await crowdfund.changeWalletAddress(owner, {from: owner})
+
 
     await token.transferFrom(owner, customer1, web3.toWei(2, 'ether'), {from: customer1})
 
@@ -215,7 +223,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       [0, currentTime + twentyEightDaysInSeconds, currentTime + 10*24*60*60, currentTime + 10*24*60*60, 15*24*60*60 , 0],
-      {from: owner, gas: 5000000}
+      {from: owner}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -240,6 +248,8 @@ contract('Token', function(accounts) {
       assert.equal((await token.balanceOf(customer3)).eq(0), true, "Should equal")
 
       await jumpToTheFuture(10*24*60*60 + 20000)
+      await crowdfund.changeWalletAddress(owner, {from: owner})
+
       await token.moveAllocation(customer3, web3.toWei(1, 'ether'), {from: customer4})
       assert.equal((await token.balanceOf(customer3)).eq(web3.toWei(1, 'ether')), true, "Should equal")
 
@@ -254,6 +264,8 @@ contract('Token', function(accounts) {
 
     // Move all allocation from a specific allocation
     await jumpToTheFuture(twentyEightDaysInSeconds + 20000)
+    await crowdfund.changeWalletAddress(owner, {from: owner})
+
 
     await token.moveAllocation(accounts[7], (await token.allocations(customer2))[0], {from: customer2})
     assert.equal((await token.balanceOf(accounts[7])).eq(bigNumberize(200000, 18)), true, "Should equal")
@@ -273,9 +285,9 @@ contract('Token', function(accounts) {
 });
 
 
-// "0xabb287314bf8b9eadea72049c9f5cc6152bb0db9", [ 3, 4, 5, 8 ], [ 1000, 750, 500, 250 ], "0x2ead71e5b767995ac5af30b9cdd8867bc89c534e", "0x90e92aee50bf9ecbc1c72bcb3513463e9f17e451", 28, 1000000, [ "0x90e92aee50bf9ecbc1c72bcb3513463e9f17e451",
-//   "0x1badea18487031d85a4ac70bf1bd1562ed898e53",
-//   "0x08f45fdad010dbfc93dffa4fdb616cb57ad1e84c",
-//   "0x05b2ed987104be1ea82cc70c2d9b04471ef74db8",
-//   "0xfa375dddf2420ebff55d76e41cce0ddbc1b4cd00",
-//   "0x0" ], [ 50000, 100000, 50000, 200000, 100000, 500000 ], [ 0, 1520121530, 1520121530, 1520121530, 1520121530, 0 ]
+"0xabb287314bf8b9eadea72049c9f5cc6152bb0db9", [3, 4, 7, 14], [ 1000, 750, 500, 250 ], "0x2ead71e5b767995ac5af30b9cdd8867bc89c534e", "0x90e92aee50bf9ecbc1c72bcb3513463e9f17e451", 28, 1000000, [ "0x90e92aee50bf9ecbc1c72bcb3513463e9f17e451",
+  "0x1badea18487031d85a4ac70bf1bd1562ed898e53",
+  "0x08f45fdad010dbfc93dffa4fdb616cb57ad1e84c",
+  "0x05b2ed987104be1ea82cc70c2d9b04471ef74db8",
+  "0xfa375dddf2420ebff55d76e41cce0ddbc1b4cd00",
+  "0x0" ], [ 50000, 100000, 50000, 200000, 100000, 500000 ], [ 0, 1520121530, 1520121530, 1520121530, 1520121530, 0 ]

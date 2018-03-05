@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/Token.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> Token.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>26/26</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">75% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>9/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>6/6</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>27/27</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">48×</span>
+<span class="cline-any cline-yes">48×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">48×</span>
+<span class="cline-any cline-yes">48×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity ^0.4.15;
+&nbsp;
+import "./library/SafeMath.sol";
+import "./library/Ownable.sol";
+import "./library/StandardToken.sol";
+&nbsp;
+contract Token is StandardToken, Ownable {
+&nbsp;
+    using SafeMath for uint;
+&nbsp;
+/////////////////////// TOKEN INFORMATION ///////////////////////
+    string public name = "NAME"; //{{.Name}} NAME CAN BE CHANGED 20 chars max
+    string public symbol = "SYMBOL"; //{{.Symbol}} SYMBOL CAN BE CHANGED 3-5 symbols
+    uint8 public decimals = 18; //{{.Decimal}} CAN BE CHANGED 0 --&gt; 18
+&nbsp;
+    // An allocation has a total balance and potentially a timelock (0 means no timelock)
+    struct allocation {
+        uint256 balance;
+        uint256 timeLock;
+    }
+&nbsp;
+    // Allocation keeps track of all the different allocations that the user created. Including crowdfund
+    mapping (address =&gt; allocation) public allocations;
+&nbsp;
+/////////////////////// VARIABLE INITIALIZATION ///////////////////////
+&nbsp;
+    // Total ICO supply
+    uint256 public crowdfundSupply;
+    // Crowdfund address
+    address public crowdfundAddress;
+    // Tokens transfers are locked until the crowdfund is closed  ---- MAYBE CHANGE THIS
+    bool public tokensLocked = true;
+&nbsp;
+&nbsp;
+/////////////////////// Modifiers ///////////////////////
+    modifier onlyUnlocked() {
+        require(tokensLocked == false);
+        _;
+    }
+&nbsp;
+/////////////////////// ERC20 FUNCTIONS ///////////////////////
+&nbsp;
+    /**
+     * @dev Transfer tokens to an address
+     * @param _to The address the tokens are transfered to
+     * @param _amount The amount of tokens transfered
+     * @return bool True if successful else false
+     */
+    function transfer(address _to, uint256 _amount) public onlyUnlocked returns (bool success) {
+        return super.transfer(_to, _amount);
+    }
+&nbsp;
+    /**
+     * @dev Transfer tokens from one address to another (needs allownace to be called first)
+     * @param _from The address the tokens are transfered from
+     * @param _to The address the tokens are being transfered to
+     * @param _amount The amount of tokens transfered
+     * @return bool True if successful else false
+     */
+    function transferFrom(address _from, address _to, uint256 _amount) public onlyUnlocked returns (bool success) {
+        return super.transferFrom(_from, _to, _amount);
+&nbsp;
+    }
+&nbsp;
+/////////////////////// TOKEN FUNCTIONS ///////////////////////
+    // We pass in only what we need (like length of crowdfund and the allocations)
+    /**
+     * @dev Constructor
+     * @param _owner The address of the contract owner
+     */
+    function Token(
+        address _owner,                     // Owner of the contract
+        uint256 _totalSupply,               // Total supply
+        address[] memory allocAddresses,    // Allocation addresses
+        uint256[] memory allocBalances,     // Allocation balances
+        uint256[] memory timelocks          // Array of timelocks
+        ) public {
+&nbsp;
+        // Ensure that all three arrays have the same length and have a length cap of 10
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(allocAddresses.length == allocBalances.length &amp;&amp; allocAddresses.length == timelocks.length &amp;&amp; allocAddresses.length &lt; 10);
+        owner = _owner;
+        uint256 multiplier = 10**uint256(decimals);
+        totalSupply_ = _totalSupply.mul(multiplier);
+        crowdfundAddress = msg.sender;
+        // Go through every allocation, and add it in the allocations mapping
+        uint256 totalTokens = 0;
+        for (uint8 i = 0; i &lt; allocBalances.length; i++) {
+            // As we don't know the crowdfund contract address beforehand, the 0x0 address will be the one telling us the crowdfund allocation
+            uint256 alloc = allocBalances[i].mul(multiplier);
+            if (allocAddresses[i] == address(0)) {
+                // Msg.sender here is the Crowdfund contract, as it is the one creating this contract
+                allocAddresses[i] = crowdfundAddress;
+                // Add to the crowdfundSupply variable
+                crowdfundSupply = alloc;
+                // The crowdfund allocation should not have a timelock
+                timelocks[i] = 0;
+            }
+            allocations[allocAddresses[i]] = allocation(alloc, timelocks[i]);
+            totalTokens = totalTokens.add(alloc);
+        }
+        <span class="missing-if-branch" title="else path not taken" >E</span>assert(totalTokens == totalSupply_);
+    }
+&nbsp;
+    /**
+     * @dev Called by an allocation to send tokens to an address
+     * @param _to The address the bought tokens are sent to
+     * @param _amount The amount of tokens being sent
+     * @return bool True if successful else false
+     */
+    function moveAllocation(address _to, uint256 _amount) public returns(bool success) {
+        // Needs to be without a timelock
+        require(now &gt; allocations[msg.sender].timeLock);
+        // This function can be called by anyone, but as soon as the allocation goes below 0, it will revert()
+        allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount);
+        // Add to the msg.sender's balance
+        balances[_to] = balances[_to].add(_amount);
+        Transfer(0x0, _to, _amount);
+        return true;
+    }
+&nbsp;
+    /**
+     * @dev Unlocks the tokens. Can only be called by the crowdfund contract
+     * @return bool True if successful else false;
+     */
+    function unlockTokens() external returns (bool) {
+        // This is a 1 way function, tokens can only be in an unlocked state
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(msg.sender == crowdfundAddress);
+        tokensLocked = false;
+        return true;
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Mar 04 2018 17:53:58 GMT-0800 (PST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
