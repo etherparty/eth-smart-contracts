@@ -11,7 +11,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
     using SafeMath for uint;
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
-
     // Amount of wei currently raised
     uint256 public weiRaised = 0;
     // UNIX timestamp of when the crowdfund starts
@@ -39,7 +38,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
     struct rate {
         uint256 price;
-        uint8 amountOfDays;
+        uint256 amountOfDays;
     }
 
     // Array of token rates for each epochs
@@ -75,11 +74,11 @@ contract Crowdfund is NonZero, CanReclaimToken {
      */
     function Crowdfund(
         address _owner,                     // Owner of the crowdfund contract
-        uint8[] memory amountOfDays,        // Array of the length of epoch per specific token price (in days)
+        uint256[] memory epochs,            // Array of the length of epoch per specific token price (in days)
         uint256[] memory prices,            // Array of the prices for each price epoch
         address _wallet,                    // Wallet address
         address _forwardTokensTo,           // Address to forward the tokens to
-        uint256 _totalDays,           // Length of the crowdfund in days
+        uint256 _totalDays,                 // Length of the crowdfund in days
         uint256 _totalSupply,               // Total Supply of the token
         address[] memory _allocAddresses,   // Array of allocation addresses
         uint256[] memory _allocBalances,    // Array of allocation balances
@@ -94,14 +93,18 @@ contract Crowdfund is NonZero, CanReclaimToken {
         crowdfundLength = _totalDays.mul(1 days);
 
         // Ensure the prices per epoch passed in are the same length and limit the size of the array
-        assert(amountOfDays.length == prices.length && prices.length < 10);
+        assert(epochs.length == prices.length && prices.length < 10);
+        // Keep track of the amount of days -- this will determine which epoch we are in
+        uint256 totalAmountOfDays = 0;
         // Push all of them to the rates array
-        for (uint8 i = 0; i < amountOfDays.length; i++) {
-            rates.push(rate(prices[i], amountOfDays[i]));
+        for (uint8 i = 0; i < epochs.length; i++) {
+            totalAmountOfDays = totalAmountOfDays.add(epochs[i]);
+            rates.push(rate(prices[i], totalAmountOfDays));
         }
+        assert(totalAmountOfDays == totalDays);
 
         // // Create the token contract
-        token = new Token(owner, crowdfundLength, _totalSupply, _allocAddresses, _allocBalances, _timelocks); // Create new Token
+        token = new Token(owner, _totalSupply, _allocAddresses, _allocBalances, _timelocks); // Create new Token
 
     }
 
@@ -109,14 +112,25 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Called by the owner or the contract at the start of the crowdfund
      * @param _startDate The start date UNIX timestamp
      */
-    function startCrowdfund(uint256 _startDate) public returns(bool) {
-        // require only the owner can start the crowdfund
-        require(msg.sender == owner);
+    function scheduleCrowdfund(uint256 _startDate) public onlyOwner returns(bool) {
         // crowdfund cannot be already activated
         require(isActivated == false);
         startsAt = _startDate;
         endsAt = startsAt + crowdfundLength;
         isActivated = true;
+        assert(startsAt >= now && endsAt > startsAt);
+        return true;
+    }
+
+    /**
+     * @dev Called by the owner of the contract to reschedule the start of the crowdfund
+     * @param _startDate The start date UNIX timestamp
+     */
+    function reScheduleCrowdfund(uint256 _startDate) public onlyOwner returns(bool) {
+        // We require this function to only be called before the crowfund starts
+        require(now < startsAt && isActivated == true);
+        startsAt = _startDate;
+        endsAt = startsAt + crowdfundLength;
         assert(startsAt >= now && endsAt > startsAt);
         return true;
     }
@@ -179,15 +193,21 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @return uint The price of the token rate per 1 ETH
      */
     function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
-        uint256 daysPassed = totalDays - (crowdfundLength - now) / 1 days;
-
+        // Calculate the amount of days passed (division truncates)
+        uint256 daysPassed = (now.sub(startsAt)).div(1 days);
         for (uint8 i = 0; i < rates.length; i++) {
         // if the days passed since the start is below the amountOfdays we use the last rate
             if (daysPassed < rates[i].amountOfDays) {
-                break;
+                // If it's the first index, then we return its price
+                if (i == 0) {
+                    return rates[i].price;
+                }
+                // else we return its last price
+                return rates[i].price;
             }
         }
-        return rates[--i].price;
+        // If we reach here, means this is after the crowdfund ended
+        return 0;
     }
 
     /**

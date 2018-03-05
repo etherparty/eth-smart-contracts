@@ -12,7 +12,6 @@ contract Token is StandardToken, Ownable {
     string public name = "NAME"; //{{.Name}} NAME CAN BE CHANGED 20 chars max
     string public symbol = "SYMBOL"; //{{.Symbol}} SYMBOL CAN BE CHANGED 3-5 symbols
     uint8 public decimals = 18; //{{.Decimal}} CAN BE CHANGED 0 --> 18
-    uint256 private crowdfundLength;
 
     // An allocation has a total balance and potentially a timelock (0 means no timelock)
     struct allocation {
@@ -71,7 +70,6 @@ contract Token is StandardToken, Ownable {
      */
     function Token(
         address _owner,                     // Owner of the contract
-        uint256 _crowdfundLength,           // Length of the crowdfund
         uint256 _totalSupply,               // Total supply
         address[] memory allocAddresses,    // Allocation addresses
         uint256[] memory allocBalances,     // Allocation balances
@@ -83,7 +81,6 @@ contract Token is StandardToken, Ownable {
         owner = _owner;
         uint256 multiplier = 10**uint256(decimals);
         totalSupply_ = _totalSupply.mul(multiplier);
-        crowdfundLength = _crowdfundLength;
         crowdfundAddress = msg.sender;
         // Go through every allocation, and add it in the allocations mapping
         uint256 totalTokens = 0;

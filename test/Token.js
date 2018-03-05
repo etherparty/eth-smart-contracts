@@ -39,7 +39,7 @@ contract('Token', function(accounts) {
 
   const twentyEightDaysInSeconds = 2419200;
   const prices = [1000, 750, 500, 250] // 1*10^18 * 1000
-  const epochs = [3, 4, 5, 8]
+  const epochs = [3, 4, 7, 14]
   const totalDays = 28
   const allocationAddresses = [forwardAddress, customer5,customer4, customer2, customer1, "0x0"]
   const allocationBalances = [50000, 100000,50000, 200000, 100000, 500000] // 500000 * 10^18
@@ -60,7 +60,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       allocationTimelocks,
-      {from: owner, gas: 4400000}
+      {from: owner, gas: 5000000}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -104,7 +104,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       allocationTimelocks,
-      {from: owner, gas: 4400000}
+      {from: owner, gas: 5000000}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -114,13 +114,13 @@ contract('Token', function(accounts) {
       ensureException(e)
     }
     // Start the crowdfund now
-    await crowdfund.startCrowdfund(await getTimestampOfCurrentBlock(), {from: owner})
+    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock(), {from: owner})
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
     // Buy tokens
     await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('1', 'ether')} )
 
-    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(250, 18)), true, "Should equal")
+    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
 
     try {
       await token.transfer(customer1, web3.toWei(2, 'ether'), {from: owner})
@@ -160,7 +160,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       allocationTimelocks,
-      {from: owner, gas: 4400000}
+      {from: owner, gas: 5000000}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -171,13 +171,13 @@ contract('Token', function(accounts) {
       ensureException(e)
     }
     // Start the crowdfund now
-    await crowdfund.startCrowdfund(await getTimestampOfCurrentBlock(), {from: owner})
+    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock(), {from: owner})
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
     // Buy tokens
     await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('1', 'ether')} )
 
-    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(250, 18)), true, "Should equal")
+    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
 
     try {
       await token.transferFrom(owner, customer1, web3.toWei(2, 'ether'), {from: customer1})
@@ -215,7 +215,7 @@ contract('Token', function(accounts) {
       allocationAddresses,
       allocationBalances,
       [0, currentTime + twentyEightDaysInSeconds, currentTime + 10*24*60*60, currentTime + 10*24*60*60, 15*24*60*60 , 0],
-      {from: owner, gas: 4400000}
+      {from: owner, gas: 5000000}
     )
     const token = await Token.at(await crowdfund.token());
 
@@ -244,13 +244,13 @@ contract('Token', function(accounts) {
       assert.equal((await token.balanceOf(customer3)).eq(web3.toWei(1, 'ether')), true, "Should equal")
 
     // Start the crowdfund now
-    await crowdfund.startCrowdfund(await getTimestampOfCurrentBlock(), {from: owner})
+    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock(), {from: owner})
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
     // Buy tokens (Means the crowdfund allocation works)
     await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('1', 'ether')})
-    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(250, 18)), true, "Should equal")
-    assert.equal((await token.allocations(crowdfund.address))[0].eq((await token.crowdfundSupply()).minus(bigNumberize(250, 18))), true, "Should equal")
+    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+    assert.equal((await token.allocations(crowdfund.address))[0].eq((await token.crowdfundSupply()).minus(bigNumberize(prices[0], 18))), true, "Should equal")
 
     // Move all allocation from a specific allocation
     await jumpToTheFuture(twentyEightDaysInSeconds + 20000)
@@ -271,3 +271,11 @@ contract('Token', function(accounts) {
     }
   });
 });
+
+
+// "0xabb287314bf8b9eadea72049c9f5cc6152bb0db9", [ 3, 4, 5, 8 ], [ 1000, 750, 500, 250 ], "0x2ead71e5b767995ac5af30b9cdd8867bc89c534e", "0x90e92aee50bf9ecbc1c72bcb3513463e9f17e451", 28, 1000000, [ "0x90e92aee50bf9ecbc1c72bcb3513463e9f17e451",
+//   "0x1badea18487031d85a4ac70bf1bd1562ed898e53",
+//   "0x08f45fdad010dbfc93dffa4fdb616cb57ad1e84c",
+//   "0x05b2ed987104be1ea82cc70c2d9b04471ef74db8",
+//   "0xfa375dddf2420ebff55d76e41cce0ddbc1b4cd00",
+//   "0x0" ], [ 50000, 100000, 50000, 200000, 100000, 500000 ], [ 0, 1520121530, 1520121530, 1520121530, 1520121530, 0 ]
