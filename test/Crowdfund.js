@@ -432,10 +432,122 @@ contract('Crowdfund', function(accounts) {
       } catch(e) {
         ensureException(e)
       }
+    });
+
+    it("deliverPresaleTokens(): It should let me deliver the presale tokens at an appropriate time", async () =>  {
+
+      const presaleAddresses = [
+      accounts[1],
+      accounts[2],
+      accounts[3],
+      accounts[4],
+      accounts[5]
+      ];
+      const presaleAmounts = [
+      1000000000000000000,
+      500000000000000000,
+      10000000000000000000,
+      1102330505704040302,
+      13700000000000000000
+      ];
+      const crowdfund = await Crowdfund.new(
+        owner,
+        epochs,
+        prices,
+        receivingAccount,
+        forwardAddress,
+        totalDays,
+        totalSupply,
+        allocationAddresses,
+        allocationBalances,
+        allocationTimelocks,
+        {from: owner}
+      )
+      const token = await Token.at(await crowdfund.token());
+
+
+      // deliver presale tokens before scheduling the crowdfund form owner
+      try {
+        await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
+      } catch(e) {
+        ensureException(e)
+      }
+
+      // deliver presale tokens before scheduling the crowdfund from anyone
+      try {
+        await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: customer1});
+      } catch(e) {
+        ensureException(e)
+      }
+
+      // deliver presale tokens before the crowdfund (scheduled)
+      await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock()+ 100, {from: owner})
+      await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
+      for(let i=0; i< presaleAddresses.length; i++) {
+        const balance = await token.balanceOf(presaleAddresses[i]);
+        assert.equal(balance.toNumber(), presaleAmounts[i]);
+      }
+
+      await jumpToTheFuture(500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+      // deliver presale tokens during the crowdfund
+
+
+      await jumpToTheFuture(twentyEightDaysInSeconds + 500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+      // deliver presale tokens after the crowdfund
+
+      try {
+        await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
+      } catch(e) {
+        ensureException(e)
+      }
   });
 
+    it("kill(): It should kill the contract under certain circumstances", async () =>  {
 
+      const crowdfund = await Crowdfund.new(
+        owner,
+        epochs,
+        prices,
+        receivingAccount,
+        forwardAddress,
+        totalDays,
+        totalSupply,
+        allocationAddresses,
+        allocationBalances,
+        allocationTimelocks,
+        {from: owner}
+      )
+      const token = await Token.at(await crowdfund.token());
 
-  // function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
-  // function kill() external onlyOwner {
+      // Kill the contract before the crowdfund
+      try {
+        await crowdfund.kill({from: owner})
+      } catch(e) {
+        ensureException(e)
+      }
+
+      await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock()+ 100, {from: owner})
+      await jumpToTheFuture(500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+      // Kill the contract during the crowdfund
+
+      await jumpToTheFuture(twentyEightDaysInSeconds + 500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+      await crowdfund.closeCrowdfund({from: owner})
+
+      // Kill the contract after the crowdfund is closed (by another person)
+      try {
+        await crowdfund.kill({from: customer5})
+      } catch(e) {
+        ensureException(e)
+      }
+
+      // Kill the contract after the crowdfund is closed (by the owner)
+      await crowdfund.kill({from: owner})
+      assert.equal(await web3.eth.getCode(crowdfund.address), '0x0', 'Contract should be destroyed')
+  });
 });

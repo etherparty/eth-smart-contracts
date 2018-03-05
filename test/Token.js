@@ -128,7 +128,7 @@ contract('Token', function(accounts) {
       ensureException(e)
     }
     // Jump in the future
-    await jumpToTheFuture(totalDays*24*60*60 + 20000)
+    await jumpToTheFuture(totalDays*24*60*60 + 2000)
     await crowdfund.changeWalletAddress(owner, {from: owner})
 
     // close the crowdfund
@@ -147,10 +147,6 @@ contract('Token', function(accounts) {
     assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(2, 18)), true, "Should equal")
 
   });
-
-    // function transferFrom(address _from, address _to, uint256 _amount) public onlyUnlocked returns (bool success) {
-  // function approve(address _spender, uint256 _value) public returns (bool) {
-  // function allowance(address _owner, address _spender) public view returns (uint256) {
 
   it("TransferFrom: It tests the transferFrom function", async () =>  {
     const crowdfund = await Crowdfund.new(
@@ -189,7 +185,7 @@ contract('Token', function(accounts) {
       ensureException(e)
     }
     // Jump in the future
-    await jumpToTheFuture(totalDays*24*60*60 + 20000)
+    await jumpToTheFuture(totalDays*24*60*60 + 2000)
     await crowdfund.changeWalletAddress(owner, {from: owner})
 
     // close the crowdfund
@@ -247,7 +243,7 @@ contract('Token', function(accounts) {
       }
       assert.equal((await token.balanceOf(customer3)).eq(0), true, "Should equal")
 
-      await jumpToTheFuture(10*24*60*60 + 20000)
+      await jumpToTheFuture(10*24*60*60 + 2000)
       await crowdfund.changeWalletAddress(owner, {from: owner})
 
       await token.moveAllocation(customer3, web3.toWei(1, 'ether'), {from: customer4})
@@ -263,7 +259,7 @@ contract('Token', function(accounts) {
     assert.equal((await token.allocations(crowdfund.address))[0].eq((await token.crowdfundSupply()).minus(bigNumberize(prices[0], 18))), true, "Should equal")
 
     // Move all allocation from a specific allocation
-    await jumpToTheFuture(twentyEightDaysInSeconds + 20000)
+    await jumpToTheFuture(twentyEightDaysInSeconds + 2000)
     await crowdfund.changeWalletAddress(owner, {from: owner})
 
 
