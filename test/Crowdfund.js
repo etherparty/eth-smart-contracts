@@ -367,6 +367,54 @@ contract('Crowdfund', function(accounts) {
       assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
     });
 
+    it("BuyTokens(): It should not let a buyer buy tokens after there is no more crowdfund allocation", async () =>  {
+      const wallet = '0x99edCE9CeC1296590B67402A73c780bAeB51c4ad'
+      const crowdfund = await Crowdfund.new(
+        owner,
+        epochs,
+        prices,
+        receivingAccount,
+        forwardAddress,
+        totalDays,
+        totalSupply,
+        allocationAddresses,
+        [50000, 100000,50000, 200000, 599000, 1000], // crowdfund gets 1000
+        allocationTimelocks,
+        {from: owner}
+      )
+    const token = await Token.at(await crowdfund.token());
+
+    // Buy tokens when not active
+    // Buying tokens should fail
+    try {
+      await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('1', 'ether')} )
+    } catch(e) {
+      ensureException(e)
+    }
+    // Start the crowdfund now
+    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock()+ 100, {from: owner})
+
+    await jumpToTheFuture(500)
+    await crowdfund.changeWalletAddress(wallet, {from: owner})
+
+    assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+
+    // Buy token when active using buyTokens()
+      assert.equal(((await token.allocations(crowdfund.address))[0]).eq(bigNumberize(1000, 18)), true, "Should equal")
+      await crowdfund.buyTokens(owner, {from: owner, value: web3.toWei('1', 'ether')} )
+      assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+      assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal")
+      assert.equal(((await token.allocations(crowdfund.address))[0]).eq(bigNumberize(0, 18)), true, "Should be empty")
+    // Buying tokens should fail
+    try {
+      await crowdfund.buyTokens(customer1, {from: owner, value: web3.toWei('1', 'ether')} )
+    } catch(e) {
+      ensureException(e)
+    }
+    assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(0, 18)), true, "Should equal")
+    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal")
+    });
+
     it("closeCrowdfund(): It should let me close the crowdfund at the appropriate time", async () =>  {
       const crowdfund = await Crowdfund.new(
         owner,
@@ -425,6 +473,73 @@ contract('Crowdfund', function(accounts) {
       assert.equal((await crowdfund.crowdfundFinalized()), true, "Should be closed")
       assert.equal((await token.tokensLocked()), false, "Should be unlocked")
       assert.equal((await token.balanceOf(forwardAddress)).eq(bigNumberize(allocationBalances[allocationBalances.length -1], 18)), true, "Should receive all of the tokens")
+
+      // Retry closing the crowdfund
+      try {
+        await crowdfund.closeCrowdfund({from: owner} )
+      } catch(e) {
+        ensureException(e)
+      }
+    });
+
+    it("closeCrowdfund(): It should let me burn tokens", async () =>  {
+      const crowdfund = await Crowdfund.new(
+        owner,
+        epochs,
+        prices,
+        receivingAccount,
+        '0x0',
+        totalDays,
+        totalSupply,
+        allocationAddresses,
+        allocationBalances,
+        allocationTimelocks,
+        {from: owner}
+      )
+      const token = await Token.at(await crowdfund.token());
+
+
+      // Close crowdfund before crowdfund starts
+      try {
+        await crowdfund.closeCrowdfund({from: owner} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await crowdfund.crowdfundFinalized()), false, "Should equal")
+      assert.equal((await token.tokensLocked()), true, "Should be locked")
+
+      await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock()+ 100, {from: owner})
+
+      await jumpToTheFuture(500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+      // Close crowdfund during crowdfund
+      try {
+        await crowdfund.closeCrowdfund({from: owner} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await crowdfund.crowdfundFinalized()), false, "Should equal")
+      assert.equal((await token.tokensLocked()), true, "Should be locked")
+
+      await jumpToTheFuture(twentyEightDaysInSeconds + 500)
+      await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+
+      // Close crowdfund when crowdfund is done by customer1
+      try {
+        await crowdfund.closeCrowdfund({from: customer1} )
+      } catch(e) {
+        ensureException(e)
+      }
+      assert.equal((await crowdfund.crowdfundFinalized()), false, "Should equal")
+      assert.equal((await token.tokensLocked()), true, "Should be locked")
+
+      // Close crowdfund when crowdfund is done by owner
+      await crowdfund.closeCrowdfund({from: owner})
+      assert.equal((await crowdfund.crowdfundFinalized()), true, "Should be closed")
+      assert.equal((await token.tokensLocked()), false, "Should be unlocked")
+      assert.equal((await token.balanceOf('0x0')).eq(bigNumberize(allocationBalances[allocationBalances.length -1], 18)), true, "Should receive all of the tokens")
 
       // Retry closing the crowdfund
       try {

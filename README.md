@@ -13,13 +13,13 @@ Here is a list of all requirements needed for the token creator contract
 
 - [X] Fixed total supply
 
-- [X] Dynamic token allocation
+- [X] Dynamic token allocation (less than 10)
 
-- [X] Dynamic pricing rounds
+- [X] Dynamic pricing rounds (less than 10)
 
-- [X] Possibility to Burn unsold tokens or Move tokens to a known address
+- [X] Possibility to Burn unsold tokens or Move tokens to a known address (move allocation with 0 address as _to)
 
-- [X] Possibility to start or schedule start your crowdfund.
+- [X] Possibility to schedule and reschedule your crowdfund.
 
 - [X] Dynamic Vesting period
 
@@ -40,7 +40,7 @@ Here is a list of all requirements needed for the token creator contract
 
 - A user should be able to decide where the leftover tokens from the crowdfund are sent. Either they are going to an address or are burnt
 
-- A user should be able to schedule his crowdfund (hard coded) OR decided to start it when he wants (by doing a function call)
+- A user should be able to schedule his crowdfund and reschedule it (by doing a function call)
 
 - A user should be able to create multiple allocations for his tokens, and every allocation should be able to vest for a variable amount of months.
 
@@ -79,4 +79,8 @@ Get the function signatures
  - Solidity flatenner
 
  `solidity_flattener --output StandardTokenFlattened.sol StandardToken.sol`
+
+ - Creating Go bindings
+
+ `./createBindings`
 

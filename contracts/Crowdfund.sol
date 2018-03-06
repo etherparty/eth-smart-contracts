@@ -19,30 +19,30 @@ contract Crowdfund is NonZero, CanReclaimToken {
     uint256 public endsAt;
     // Instance of the Fuel token contract
     Token public token;
-    // Whether the crowdfund is in a "Ready to activate" state
+    // Whether the crowdfund is Activated (scheduled to start) state
     bool public isActivated = false;
-    // Flag keeping track of crowdsale status. Ensures closeCrowdfund() and kill() can only be called once
+    // Flag keeping track of crowdsale status. Ensures closeCrowdfund() can only be called once and kill() only after closing the crowdfund
     bool public crowdfundFinalized = false;
 
 
     // Our own vars
     // Address of secure wallet to send ETH/SBTC crowdfund contributions to
     address public wallet;
-    // Address to forward the tokens to at the end of the Crowdfund
+    // Address to forward the tokens to at the end of the Crowdfund (can be 0x0 for burning tokens)
     address public forwardTokensTo;
     // Total length of the crowdfund
     uint256 public crowdfundLength;
     // Total amount of days
     uint256 public totalDays;
 
-
-    struct rate {
+    // This struct keeps the rates of tokens per epoch
+    struct Rate {
         uint256 price;
         uint256 amountOfDays;
     }
 
-    // Array of token rates for each epochs
-    rate[] public rates;
+    // Array of token rates for each epoch
+    Rate[] public rates;
 
 /////////////////////// EVENTS ///////////////////////
 
@@ -50,9 +50,8 @@ contract Crowdfund is NonZero, CanReclaimToken {
     event TokenPurchase(address indexed purchaser, uint256 value, uint256 amount);
 
 /////////////////////// MODIFIERS ///////////////////////
-
     // Ensure the crowdfund is ongoing
-    modifier crowdfundIsActive() {
+    modifier duringCrowdfund() {
         assert(now >= startsAt && now <= endsAt);
         _;
     }
@@ -71,52 +70,67 @@ contract Crowdfund is NonZero, CanReclaimToken {
     /**
      * @dev Constructor
      * @param _owner The address of the contract owner
+     * @param _epochs Array of the length of epoch per specific token price (in days)
+     * @param _prices Array of the prices for each price epoch
+     * @param _wallet Wallet address where ETH/SBTC will be transferred into
+     * @param _forwardTokensTo Address to forward the tokens to
+     * @param _totalDays Length of the crowdfund in days
+     * @param _totalSupply Total Supply of the token
+     * @param _allocAddresses Array of allocation addresses
+     * @param _allocBalances Array of allocation balances
+     * @param _timelocks Array of timelocks for all the allocations
      */
     function Crowdfund(
-        address _owner,                     // Owner of the crowdfund contract
-        uint256[] memory epochs,            // Array of the length of epoch per specific token price (in days)
-        uint256[] memory prices,            // Array of the prices for each price epoch
-        address _wallet,                    // Wallet address
-        address _forwardTokensTo,           // Address to forward the tokens to
-        uint256 _totalDays,                 // Length of the crowdfund in days
-        uint256 _totalSupply,               // Total Supply of the token
-        address[] memory _allocAddresses,   // Array of allocation addresses
-        uint256[] memory _allocBalances,    // Array of allocation balances
-        uint256[] memory _timelocks         // Array of timelocks for all the allocations
+        address _owner,
+        uint256[] memory _epochs,
+        uint256[] memory _prices,
+        address _wallet,
+        address _forwardTokensTo,
+        uint256 _totalDays,
+        uint256 _totalSupply,
+        address[] memory _allocAddresses,
+        uint256[] memory _allocBalances,
+        uint256[] memory _timelocks
         ) public {
 
-        wallet = _wallet;
         // Change the owner to the owner address.
         owner = _owner;
+
+        wallet = _wallet;
         forwardTokensTo = _forwardTokensTo;
         totalDays = _totalDays;
+        // Crowdfund length is in seconds
         crowdfundLength = _totalDays.mul(1 days);
 
         // Ensure the prices per epoch passed in are the same length and limit the size of the array
-        assert(epochs.length == prices.length && prices.length < 10);
+        assert(_epochs.length == _prices.length && _prices.length < 10);
+
         // Keep track of the amount of days -- this will determine which epoch we are in
         uint256 totalAmountOfDays = 0;
         // Push all of them to the rates array
-        for (uint8 i = 0; i < epochs.length; i++) {
-            totalAmountOfDays = totalAmountOfDays.add(epochs[i]);
-            rates.push(rate(prices[i], totalAmountOfDays));
+        for (uint8 i = 0; i < _epochs.length; i++) {
+            totalAmountOfDays = totalAmountOfDays.add(_epochs[i]);
+            rates.push(Rate(_prices[i], totalAmountOfDays));
+            // So here we will have [rate(100, 7), rate(50, 14)]
+            // Meaning that for the first week, the rate is 100, then then after 7 days, it becomes 50
         }
+        // Ensure that the total amount of days is the expected amount
         assert(totalAmountOfDays == totalDays);
 
-        // // Create the token contract
+        // Create the token contract
         token = new Token(owner, _totalSupply, _allocAddresses, _allocBalances, _timelocks); // Create new Token
 
     }
 
     /**
-     * @dev Called by the owner or the contract at the start of the crowdfund
+     * @dev Called by the owner or the contract to schedule the crowdfund
      * @param _startDate The start date UNIX timestamp
      */
     function scheduleCrowdfund(uint256 _startDate) public onlyOwner returns(bool) {
-        // crowdfund cannot be already activated
+        // Crowdfund cannot be already activated
         require(isActivated == false);
         startsAt = _startDate;
-        endsAt = startsAt + crowdfundLength;
+        endsAt = startsAt.add(crowdfundLength);
         isActivated = true;
         assert(startsAt >= now && endsAt > startsAt);
         return true;
@@ -127,10 +141,10 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _startDate The start date UNIX timestamp
      */
     function reScheduleCrowdfund(uint256 _startDate) public onlyOwner returns(bool) {
-        // We require this function to only be called before the crowfund starts
+        // We require this function to only be called before the crowfund starts and the crowdfund has been scheduled
         require(now < startsAt && isActivated == true);
         startsAt = _startDate;
-        endsAt = startsAt + crowdfundLength;
+        endsAt = startsAt.add(crowdfundLength);
         assert(startsAt >= now && endsAt > startsAt);
         return true;
     }
@@ -144,10 +158,10 @@ contract Crowdfund is NonZero, CanReclaimToken {
     }
 
     /**
-     * @dev Change the main contribution wallet
+     * @dev Change the token forward address. This can be the 0 address.
      * @param _forwardTokensTo The new contribution wallet address
      */
-    function changeForwardAddress(address _forwardTokensTo) public onlyOwner nonZeroAddress(_forwardTokensTo) {
+    function changeForwardAddress(address _forwardTokensTo) public onlyOwner {
         forwardTokensTo = _forwardTokensTo;
     }
 
@@ -155,11 +169,14 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Buys tokens at the current rate
      * @param _to The address the bought tokens are sent to
      */
-    function buyTokens(address _to) public crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable {
+    function buyTokens(address _to) public duringCrowdfund nonZeroAddress(_to) nonZeroValue payable {
         uint256 weiAmount = msg.value;
+        // Get the total rate of tokens
         uint256 tokens = weiAmount.mul(getRate());
         weiRaised = weiRaised.add(weiAmount);
+        // Transfer out the ETH to our wallet
         wallet.transfer(weiAmount);
+        // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
         if (!token.moveAllocation(_to, tokens)) {
             revert();
         }
@@ -192,17 +209,13 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Returns token rate depending on the current time
      * @return uint The price of the token rate per 1 ETH
      */
-    function getRate() public constant returns (uint price) { // This one is dynamic, would have multiple rounds
+    function getRate() public view returns (uint price) { // This one is dynamic, would have multiple rounds
         // Calculate the amount of days passed (division truncates)
         uint256 daysPassed = (now.sub(startsAt)).div(1 days);
+        // Safe for loop -- rates is limited to 10 elements, the index never goes above 9, below 0
         for (uint8 i = 0; i < rates.length; i++) {
-        // if the days passed since the start is below the amountOfdays we use the last rate
+            // if the days passed since the start is below the amountOfdays we use that rate
             if (daysPassed < rates[i].amountOfDays) {
-                // If it's the first index, then we return its price
-                if (i == 0) {
-                    return rates[i].price;
-                }
-                // else we return its last price
                 return rates[i].price;
             }
         }
@@ -219,29 +232,19 @@ contract Crowdfund is NonZero, CanReclaimToken {
     function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
         require(_batchOfAddresses.length == _amountOfTokens.length);
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
-            deliverPresaleToken(_batchOfAddresses[i], _amountOfTokens[i]);
+            if (!token.moveAllocation(_batchOfAddresses[i], _amountOfTokens[i])) {
+                revert();
+            }
         }
         return true;
     }
-
-    /**
-     * @dev Sends token to presale address
-     * @param _accountHolder Account address to send token to
-     * @param _amountOfTokens Amount of tokens to send
-     */
-    // All presale purchases will be delivered.
-    function deliverPresaleToken(address _accountHolder, uint256 _amountOfTokens) internal {
-        if (!token.moveAllocation(_accountHolder, _amountOfTokens)) {
-            revert();
-        }
-    }
-
     /**
      * @dev Called by the owner to kill the contact once the crowdfund is finished and there are no tokens left
      */
     function kill() external onlyOwner {
         var (amount,) = token.allocations(this);
         require(crowdfundFinalized == true && amount == 0);
+        // Send any ETH to the owner
         selfdestruct(owner);
     }
 

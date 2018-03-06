@@ -14,13 +14,13 @@ contract Token is StandardToken, Ownable {
     uint8 public decimals = 18; //{{.Decimal}} CAN BE CHANGED 0 --> 18
 
     // An allocation has a total balance and potentially a timelock (0 means no timelock)
-    struct allocation {
+    struct Allocation {
         uint256 balance;
         uint256 timeLock;
     }
 
     // Allocation keeps track of all the different allocations that the user created. Including crowdfund
-    mapping (address => allocation) public allocations;
+    mapping (address => Allocation) public allocations;
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
 
@@ -28,7 +28,7 @@ contract Token is StandardToken, Ownable {
     uint256 public crowdfundSupply;
     // Crowdfund address
     address public crowdfundAddress;
-    // Tokens transfers are locked until the crowdfund is closed  ---- MAYBE CHANGE THIS
+    // Tokens transfers are locked until the crowdfund is closed -- SHOULD WE MAKE IT SO THE TOKENS ARE UNLOCKED WHEN THERE ARE NO MORE CROWDFUND TOKENS?
     bool public tokensLocked = true;
 
 
@@ -67,37 +67,45 @@ contract Token is StandardToken, Ownable {
     /**
      * @dev Constructor
      * @param _owner The address of the contract owner
+     * @param _totalSupply Total supply
+     * @param _allocAddresses Allocation addresses
+     * @param _allocBalances Allocation balances
+     * @param _timelocks Array of _timelocks
      */
     function Token(
-        address _owner,                     // Owner of the contract
-        uint256 _totalSupply,               // Total supply
-        address[] memory allocAddresses,    // Allocation addresses
-        uint256[] memory allocBalances,     // Allocation balances
-        uint256[] memory timelocks          // Array of timelocks
+        address _owner,
+        uint256 _totalSupply,
+        address[] memory _allocAddresses,
+        uint256[] memory _allocBalances,
+        uint256[] memory _timelocks
         ) public {
 
         // Ensure that all three arrays have the same length and have a length cap of 10
-        require(allocAddresses.length == allocBalances.length && allocAddresses.length == timelocks.length && allocAddresses.length < 10);
+        require(_allocAddresses.length == _allocBalances.length && _allocAddresses.length == _timelocks.length && _allocAddresses.length < 10);
         owner = _owner;
         uint256 multiplier = 10**uint256(decimals);
+        // Set the total supply (from inherited contract)
         totalSupply_ = _totalSupply.mul(multiplier);
+        // Set the crowdfund address
         crowdfundAddress = msg.sender;
         // Go through every allocation, and add it in the allocations mapping
         uint256 totalTokens = 0;
-        for (uint8 i = 0; i < allocBalances.length; i++) {
+        for (uint8 i = 0; i < _allocBalances.length; i++) {
+            uint256 alloc = _allocBalances[i].mul(multiplier);
             // As we don't know the crowdfund contract address beforehand, the 0x0 address will be the one telling us the crowdfund allocation
-            uint256 alloc = allocBalances[i].mul(multiplier);
-            if (allocAddresses[i] == address(0)) {
+            if (_allocAddresses[i] == address(0)) {
                 // Msg.sender here is the Crowdfund contract, as it is the one creating this contract
-                allocAddresses[i] = crowdfundAddress;
+                _allocAddresses[i] = crowdfundAddress;
                 // Add to the crowdfundSupply variable
                 crowdfundSupply = alloc;
                 // The crowdfund allocation should not have a timelock
-                timelocks[i] = 0;
+                _timelocks[i] = 0;
             }
-            allocations[allocAddresses[i]] = allocation(alloc, timelocks[i]);
+
+            allocations[_allocAddresses[i]] = Allocation(alloc, _timelocks[i]);
             totalTokens = totalTokens.add(alloc);
         }
+        // Ensure that the total supply matches all the allocations
         assert(totalTokens == totalSupply_);
     }
 
@@ -108,9 +116,9 @@ contract Token is StandardToken, Ownable {
      * @return bool True if successful else false
      */
     function moveAllocation(address _to, uint256 _amount) public returns(bool success) {
-        // Needs to be without a timelock
+        // Needs not be timelocked
         require(now > allocations[msg.sender].timeLock);
-        // This function can be called by anyone, but as soon as the allocation goes below 0, it will revert()
+        // This function can be called by anyone, but as soon as the allocation goes below 0, it will revert
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount);
         // Add to the msg.sender's balance
         balances[_to] = balances[_to].add(_amount);
