@@ -81,7 +81,7 @@ contract Token is StandardToken, Ownable {
         ) public {
 
         // Ensure that all three arrays have the same length and have a length cap of 10
-        require(_allocAddresses.length == _allocBalances.length && _allocAddresses.length == _timelocks.length && _allocAddresses.length < 10);
+        require(_allocAddresses.length == _allocBalances.length && _allocAddresses.length == _timelocks.length && _allocAddresses.length <= 10);
         owner = _owner;
         uint256 multiplier = 10**uint256(decimals);
         // Set the total supply (from inherited contract)
