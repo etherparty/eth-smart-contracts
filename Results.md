@@ -1,70 +1,15 @@
 # Oyente
-```
-INFO:root:contract contracts/merged/Test.sol:BasicToken:
+```javascript
+INFO:root:contract contracts/Crowdfund.sol:Crowdfund:
 INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     99.5%
+INFO:symExec:     EVM Code Coverage:                     91.0%
 INFO:symExec:     Parity Multisig Bug 2:                 False
 INFO:symExec:     Callstack Depth Attack Vulnerability:  False
 INFO:symExec:     Transaction-Ordering Dependence (TOD): False
 INFO:symExec:     Timestamp Dependency:                  False
 INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:CanReclaimToken:
-INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     97.6%
-INFO:symExec:     Parity Multisig Bug 2:                 False
-INFO:symExec:     Callstack Depth Attack Vulnerability:  False
-INFO:symExec:     Transaction-Ordering Dependence (TOD): False
-INFO:symExec:     Timestamp Dependency:                  False
-INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:Crowdfund:
-INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     89.4%
-INFO:symExec:     Parity Multisig Bug 2:                 False
-INFO:symExec:     Callstack Depth Attack Vulnerability:  False
-INFO:symExec:     Transaction-Ordering Dependence (TOD): False
-INFO:symExec:     Timestamp Dependency:                  False
-INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:NonZero:
-INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     100.0%
-INFO:symExec:     Parity Multisig Bug 2:                 False
-INFO:symExec:     Callstack Depth Attack Vulnerability:  False
-INFO:symExec:     Transaction-Ordering Dependence (TOD): False
-INFO:symExec:     Timestamp Dependency:                  False
-INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:Ownable:
-INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     99.5%
-INFO:symExec:     Parity Multisig Bug 2:                 False
-INFO:symExec:     Callstack Depth Attack Vulnerability:  False
-INFO:symExec:     Transaction-Ordering Dependence (TOD): False
-INFO:symExec:     Timestamp Dependency:                  False
-INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:SafeERC20:
-INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     100.0%
-INFO:symExec:     Parity Multisig Bug 2:                 False
-INFO:symExec:     Callstack Depth Attack Vulnerability:  False
-INFO:symExec:     Transaction-Ordering Dependence (TOD): False
-INFO:symExec:     Timestamp Dependency:                  False
-INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:SafeMath:
-INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     100.0%
-INFO:symExec:     Parity Multisig Bug 2:                 False
-INFO:symExec:     Callstack Depth Attack Vulnerability:  False
-INFO:symExec:     Transaction-Ordering Dependence (TOD): False
-INFO:symExec:     Timestamp Dependency:                  False
-INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:StandardToken:
-INFO:symExec:   ============ Results ===========
-INFO:symExec:     EVM Code Coverage:                     99.9%
-INFO:symExec:     Parity Multisig Bug 2:                 False
-INFO:symExec:     Callstack Depth Attack Vulnerability:  False
-INFO:symExec:     Transaction-Ordering Dependence (TOD): False
-INFO:symExec:     Timestamp Dependency:                  False
-INFO:symExec:     Re-Entrancy Vulnerability:             False
-INFO:root:contract contracts/merged/Test.sol:Token:
+INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/Token.sol:Token:
 INFO:symExec:   ============ Results ===========
 INFO:symExec:     EVM Code Coverage:                     98.3%
 INFO:symExec:     Parity Multisig Bug 2:                 False
@@ -73,13 +18,68 @@ INFO:symExec:     Transaction-Ordering Dependence (TOD): False
 INFO:symExec:     Timestamp Dependency:                  False
 INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/library/BasicToken.sol:BasicToken:
+INFO:symExec:   ============ Results ===========
+INFO:symExec:     EVM Code Coverage:                     99.5%
+INFO:symExec:     Parity Multisig Bug 2:                 False
+INFO:symExec:     Callstack Depth Attack Vulnerability:  False
+INFO:symExec:     Transaction-Ordering Dependence (TOD): False
+INFO:symExec:     Timestamp Dependency:                  False
+INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/library/CanReclaimToken.sol:CanReclaimToken:
+INFO:symExec:   ============ Results ===========
+INFO:symExec:     EVM Code Coverage:                     97.5%
+INFO:symExec:     Parity Multisig Bug 2:                 False
+INFO:symExec:     Callstack Depth Attack Vulnerability:  False
+INFO:symExec:     Transaction-Ordering Dependence (TOD): False
+INFO:symExec:     Timestamp Dependency:                  False
+INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/library/NonZero.sol:NonZero:
+INFO:symExec:   ============ Results ===========
+INFO:symExec:     EVM Code Coverage:                     100.0%
+INFO:symExec:     Parity Multisig Bug 2:                 False
+INFO:symExec:     Callstack Depth Attack Vulnerability:  False
+INFO:symExec:     Transaction-Ordering Dependence (TOD): False
+INFO:symExec:     Timestamp Dependency:                  False
+INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/library/Ownable.sol:Ownable:
+INFO:symExec:   ============ Results ===========
+INFO:symExec:     EVM Code Coverage:                     99.5%
+INFO:symExec:     Parity Multisig Bug 2:                 False
+INFO:symExec:     Callstack Depth Attack Vulnerability:  False
+INFO:symExec:     Transaction-Ordering Dependence (TOD): False
+INFO:symExec:     Timestamp Dependency:                  False
+INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/library/SafeERC20.sol:SafeERC20:
+INFO:symExec:   ============ Results ===========
+INFO:symExec:     EVM Code Coverage:                     100.0%
+INFO:symExec:     Parity Multisig Bug 2:                 False
+INFO:symExec:     Callstack Depth Attack Vulnerability:  False
+INFO:symExec:     Transaction-Ordering Dependence (TOD): False
+INFO:symExec:     Timestamp Dependency:                  False
+INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/library/SafeMath.sol:SafeMath:
+INFO:symExec:   ============ Results ===========
+INFO:symExec:     EVM Code Coverage:                     100.0%
+INFO:symExec:     Parity Multisig Bug 2:                 False
+INFO:symExec:     Callstack Depth Attack Vulnerability:  False
+INFO:symExec:     Transaction-Ordering Dependence (TOD): False
+INFO:symExec:     Timestamp Dependency:                  False
+INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
-INFO:symExec:   ====== Analysis Completed ======
+INFO:root:contract contracts/library/StandardToken.sol:StandardToken:
+INFO:symExec:   ============ Results ===========
+INFO:symExec:     EVM Code Coverage:                     99.9%
+INFO:symExec:     Parity Multisig Bug 2:                 False
+INFO:symExec:     Callstack Depth Attack Vulnerability:  False
+INFO:symExec:     Transaction-Ordering Dependence (TOD): False
+INFO:symExec:     Timestamp Dependency:                  False
+INFO:symExec:     Re-Entrancy Vulnerability:             False
 INFO:symExec:   ====== Analysis Completed ======
 ```
 
