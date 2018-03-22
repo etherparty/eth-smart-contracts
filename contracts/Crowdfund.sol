@@ -68,7 +68,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         _;
     }
 
-    // Ensure actions can only haoppen before the crowdfund
+    // Ensure actions can only happen before the crowdfund
     modifier onlyBeforeCrowdfund() {
         require(now <= startsAt);
         _;
