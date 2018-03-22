@@ -34,6 +34,9 @@ contract Crowdfund is NonZero, CanReclaimToken {
     uint256 public crowdfundLength;
     // Total amount of days
     uint256 public totalDays;
+    // If they want to whitelist crowdfund contributors
+    bool public withWhitelist;
+
 
     // This struct keeps the rates of tokens per epoch
     struct Rate {
@@ -43,6 +46,9 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
     // Array of token rates for each epoch
     Rate[] public rates;
+
+    mapping (address => bool) public whitelist;
+
 
 /////////////////////// EVENTS ///////////////////////
 
@@ -62,10 +68,20 @@ contract Crowdfund is NonZero, CanReclaimToken {
         _;
     }
 
+    // Ensure actions can only haoppen before the crowdfund
     modifier onlyBeforeCrowdfund() {
         require(now <= startsAt);
         _;
     }
+
+    // Modifier that looks if this is whitelisted
+    modifier isWhitelisted(address _beneficiary) {
+        if (withWhitelist == true) {
+            require(whitelist[_beneficiary]);
+        }
+        _;
+    }
+
 /////////////////////// CROWDFUND FUNCTIONS ///////////////////////
     /**
      * @dev Constructor
@@ -88,6 +104,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         address _forwardTokensTo,
         uint256 _totalDays,
         uint256 _totalSupply,
+        bool _withWhitelist,
         address[] memory _allocAddresses,
         uint256[] memory _allocBalances,
         uint256[] memory _timelocks
@@ -95,6 +112,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
         // Change the owner to the owner address.
         owner = _owner;
+        withWhitelist = _withWhitelist;
 
         wallet = _wallet;
         forwardTokensTo = _forwardTokensTo;
@@ -161,6 +179,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Change the token forward address. This can be the 0 address.
      * @param _forwardTokensTo The new contribution wallet address
      */
+     //
     function changeForwardAddress(address _forwardTokensTo) public onlyOwner {
         forwardTokensTo = _forwardTokensTo;
     }
@@ -169,7 +188,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Buys tokens at the current rate
      * @param _to The address the bought tokens are sent to
      */
-    function buyTokens(address _to) public duringCrowdfund nonZeroAddress(_to) nonZeroValue payable {
+    function buyTokens(address _to) public duringCrowdfund nonZeroAddress(_to) nonZeroValue isWhitelisted(msg.sender) payable {
         uint256 weiAmount = msg.value;
         // Get the total rate of tokens
         uint256 tokens = weiAmount.mul(getRate());
@@ -229,6 +248,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _amountOfTokens An array of tokens bought synchronized with the index value of _batchOfAddresses
      * @return bool True if successful else false
      */
+     // WANT PRESALE? -- need to ask first
     function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
         require(_batchOfAddresses.length == _amountOfTokens.length);
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
@@ -246,6 +266,32 @@ contract Crowdfund is NonZero, CanReclaimToken {
         require(crowdfundFinalized == true && amount == 0);
         // Send any ETH to the owner
         selfdestruct(owner);
+    }
+
+    /**
+    * @dev Adds single address to whitelist.
+    * @param _beneficiary Address to be added to the whitelist
+    */
+    function addToWhitelist(address _beneficiary) external onlyOwner {
+        whitelist[_beneficiary] = true;
+    }
+
+    /**
+    * @dev Adds list of addresses to whitelist. Not overloaded due to limitations with truffle testing.
+    * @param _beneficiaries Addresses to be added to the whitelist
+    */
+    function addManyToWhitelist(address[] _beneficiaries) external onlyOwner {
+        for (uint256 i = 0; i < _beneficiaries.length; i++) {
+            whitelist[_beneficiaries[i]] = true;
+        }
+    }
+
+    /**
+    * @dev Removes single address from whitelist.
+    * @param _beneficiary Address to be removed to the whitelist
+    */
+    function removeFromWhitelist(address _beneficiary) external onlyOwner {
+        whitelist[_beneficiary] = false;
     }
 
     /**
