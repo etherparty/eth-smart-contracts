@@ -100,6 +100,10 @@ contract('Token', function (accounts) {
       assert.equal(allocations[0].eq(bigNumberize(allocationBalances[i], 18)), true, "Allocation balance is right");
       assert.equal(allocations[1].eq(allocationTimelocks[i]), true, "Allocation timelock is right");
     }
+    await jumpToTheFuture(20000)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
   });
 
 
@@ -160,12 +164,16 @@ contract('Token', function (accounts) {
     })
 
 
+
     await token.transfer(customer1, web3.toWei(2, 'ether'), {
       from: owner
     })
 
     assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(2, 18)), true, "Should equal")
-
+    await jumpToTheFuture(20000)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
   });
 
   it("TransferFrom: It tests the transferFrom function", async () => {
@@ -233,7 +241,10 @@ contract('Token', function (accounts) {
     })
 
     assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(2, 18)), true, "Should equal")
-
+    await jumpToTheFuture(20000)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
   });
 
   it("MoveAllocation: It tests the moveAllocation function", async () => {
@@ -332,6 +343,11 @@ contract('Token', function (accounts) {
     } catch (e) {
       ensureException(e)
     }
+
+    await jumpToTheFuture(20000)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
   });
 });
 

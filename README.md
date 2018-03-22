@@ -59,6 +59,7 @@ Here is a list of all requirements needed for the token creator contract
 - Oyente https://github.com/melonproject/oyente
 
 `docker run -i -t -v `pwd`/contracts:/oyente/contracts luongnguyen/oyente`
+
 `cd /oyente/oyente && python oyente.py -s contracts/Crowdfund.sol`
 
 - Mythril

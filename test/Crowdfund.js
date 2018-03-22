@@ -630,11 +630,9 @@ contract('Crowdfund', function (accounts) {
     assert.equal(await web3.eth.getCode(crowdfund.address), '0x0', 'Contract should be destroyed')
   });
 
-  // Test whitelist functionality
-  // Buy tokens not on whitelist -- fail
-  // Add to whitelist -- Pass
-  // remove from whitelist -- fail
-  it("WHITELISTED BuyTokens() and function (): It should let a buyer buy tokens only if whitelisted", async() => {
+  it("WHITELISTED BuyTokens() and function (): It should let a buyer buy tokens only i" +
+      "f whitelisted",
+  async() => {
 
     const newCrowdfundArgs = [
       owner,
@@ -650,7 +648,7 @@ contract('Crowdfund', function (accounts) {
       allocationTimelocks
     ]
 
-    const wallet = '0x99edCE9CeC1296590B67402A73c780bAeB51c4ad'
+    const wallet = '0xDFaA222a5ce7f361e87A85905272C2F02fb19195'
     const crowdfund = await Crowdfund.new(...newCrowdfundArgs, {from: owner})
     const token = await Token.at(await crowdfund.token());
 
@@ -696,7 +694,6 @@ contract('Crowdfund', function (accounts) {
     assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
     assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal")
     assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)), true, "Should equal")
-    console.log((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)))
     // Whitelist customer2
     assert.equal((await crowdfund.whitelist(customer2)), false, "Should be false")
     await crowdfund.addToWhitelist(customer2, {from: owner})
@@ -704,14 +701,14 @@ contract('Crowdfund', function (accounts) {
     await crowdfund.changeWalletAddress(wallet, {from: owner})
     assert.equal((await crowdfund.whitelist(customer2)), true, "Should equal")
 
-    // Buy token when active using function()
+    // Buy token when active and customer2 whitelisted using function()
     await web3
-      .eth
-      .sendTransaction({
-        from: customer2,
-        to: crowdfund.address,
-        value: web3.toWei('1', 'ether')
-      })
+    .eth
+    .sendTransaction({
+      from: customer2,
+      to: crowdfund.address,
+      value: web3.toWei('1', 'ether')
+    })
     assert.equal((await token.balanceOf(customer2)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
     assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(2, 18)), true, "Should equal")
     assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(2, 18)), true, "Should equal")
@@ -725,6 +722,37 @@ contract('Crowdfund', function (accounts) {
     } catch (e) {
       ensureException(e)
     }
+
+    // Remove customer1 from the whitelist
+    await crowdfund.removeFromWhitelist(customer1, {from: owner})
+    try {
+      await crowdfund.buyTokens(customer1, {
+        from: customer1,
+        value: web3.toWei('1', 'ether')
+      })
+    } catch (e) {
+      ensureException(e)
+    }
+    assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(2, 18)), true, "Should equal")
+    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(2, 18)), true, "Should equal")
+
+    // Remove customer2 from the whitelist
+    await crowdfund.removeFromWhitelist(customer2, {from: owner})
+    try {
+      await web3
+      .eth
+      .sendTransaction({
+        from: customer2,
+        to: crowdfund.address,
+        value: web3.toWei('1', 'ether')
+      })
+    } catch (e) {
+      ensureException(e)
+    }
+    assert.equal((await token.balanceOf(customer2)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(2, 18)), true, "Should equal")
+    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(2, 18)), true, "Should equal")
 
     // Buy token when active using buyTokens() and zero value
     try {
@@ -749,6 +777,20 @@ contract('Crowdfund', function (accounts) {
       ensureException(e)
     }
     assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
+
+    assert.equal((await crowdfund.whitelist(customer3)), false, "Should be false")
+    assert.equal((await crowdfund.whitelist(customer4)), false, "Should be false")
+    assert.equal((await crowdfund.whitelist(customer5)), false, "Should be false")
+    await crowdfund.addManyToWhitelist([customer3, customer4, customer5])
+    assert.equal((await crowdfund.whitelist(customer3)), true, "Should be true")
+    assert.equal((await crowdfund.whitelist(customer4)), true, "Should be true")
+    assert.equal((await crowdfund.whitelist(customer5)), true, "Should be true")
+    await crowdfund.removeFromWhitelist(customer3, {from: owner})
+    await crowdfund.removeFromWhitelist(customer4, {from: owner})
+    await crowdfund.removeFromWhitelist(customer5, {from: owner})
+    assert.equal((await crowdfund.whitelist(customer3)), false, "Should be false")
+    assert.equal((await crowdfund.whitelist(customer4)), false, "Should be false")
+    assert.equal((await crowdfund.whitelist(customer5)), false, "Should be false")
 
     // Buy tokens after crowdfund is closed
     await crowdfund.closeCrowdfund({from: owner})
