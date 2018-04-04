@@ -28,7 +28,7 @@ contract Token is StandardToken, Ownable {
     uint256 public crowdfundSupply;
     // Crowdfund address
     address public crowdfundAddress;
-    // Tokens transfers are locked until the crowdfund is closed -- SHOULD WE MAKE IT SO THE TOKENS ARE UNLOCKED WHEN THERE ARE NO MORE CROWDFUND TOKENS?
+    // Tokens transfers are locked until the crowdfund is closed -- 
     bool public tokensLocked = true;
 
 
@@ -80,7 +80,7 @@ contract Token is StandardToken, Ownable {
         uint256[] memory _timelocks
         ) public {
 
-        // Ensure that all three arrays have the same length and have a length cap of 10
+        // Ensure that all three arrays have the same length and have a length cap of less than or equal to 10
         require(_allocAddresses.length == _allocBalances.length && _allocAddresses.length == _timelocks.length && _allocAddresses.length <= 10);
         owner = _owner;
         uint256 multiplier = 10**uint256(decimals);

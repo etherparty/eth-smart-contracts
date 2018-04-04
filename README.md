@@ -13,9 +13,9 @@ Here is a list of all requirements needed for the token creator contract
 
 - [X] Fixed total supply
 
-- [X] Dynamic token allocation (less than 10)
+- [X] Dynamic token allocation (less than or equal to 10)
 
-- [X] Dynamic pricing rounds (less than 10)
+- [X] Dynamic pricing rounds (less than or equal to 10)
 
 - [X] Possibility to Burn unsold tokens or Move tokens to a known address (move allocation with 0 address as _to)
 
