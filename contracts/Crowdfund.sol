@@ -58,7 +58,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
 /////////////////////// MODIFIERS ///////////////////////
     // Ensure the crowdfund is ongoing
     modifier duringCrowdfund() {
-        assert(now >= startsAt && now <= endsAt);
+        require(now >= startsAt && now <= endsAt);
         _;
     }
 
@@ -121,7 +121,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         crowdfundLength = _totalDays.mul(1 days);
 
         // Ensure the prices per epoch passed in are the same length and limit the size of the array
-        assert(_epochs.length == _prices.length && _prices.length <= 10);
+        require(_epochs.length == _prices.length && _prices.length <= 10);
 
         // Keep track of the amount of days -- this will determine which epoch we are in
         uint256 totalAmountOfDays = 0;
