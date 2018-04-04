@@ -208,7 +208,8 @@ contract Crowdfund is NonZero, CanReclaimToken {
      */
     function closeCrowdfund() external onlyAfterCrowdfund onlyOwner returns (bool success) {
         require(crowdfundFinalized == false);
-        var (amount,) = token.allocations(this);
+        uint256 amount;
+        (amount,) = token.allocations(this);
         if (amount > 0) {
             // Transfer all of the tokens out to the final address (if burning, send to 0x0)
             if (!token.moveAllocation(forwardTokensTo, amount)) {
