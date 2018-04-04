@@ -277,12 +277,22 @@ contract Crowdfund is NonZero, CanReclaimToken {
     }
 
     /**
-    * @dev Adds list of addresses to whitelist. Not overloaded due to limitations with truffle testing.
+    * @dev Adds list of addresses to whitelist.
     * @param _beneficiaries Addresses to be added to the whitelist
     */
     function addManyToWhitelist(address[] _beneficiaries) external onlyOwner {
         for (uint256 i = 0; i < _beneficiaries.length; i++) {
             whitelist[_beneficiaries[i]] = true;
+        }
+    }
+
+    /**
+    * @dev Removes list of addresses to whitelist
+    * @param _beneficiaries Addresses to be removed from the whitelist
+    */
+    function removeManyFromWhitelist(address[] _beneficiaries) external onlyOwner {
+        for (uint256 i = 0; i < _beneficiaries.length; i++) {
+            whitelist[_beneficiaries[i]] = false;
         }
     }
 
