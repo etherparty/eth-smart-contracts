@@ -144,7 +144,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Called by the owner or the contract to schedule the crowdfund
      * @param _startDate The start date UNIX timestamp
      */
-    function scheduleCrowdfund(uint256 _startDate) public onlyOwner returns(bool) {
+    function scheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
         // Crowdfund cannot be already activated
         require(isActivated == false);
         startsAt = _startDate;
@@ -162,7 +162,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Called by the owner of the contract to reschedule the start of the crowdfund
      * @param _startDate The start date UNIX timestamp
      */
-    function reScheduleCrowdfund(uint256 _startDate) public onlyOwner returns(bool) {
+    function reScheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
         // We require this function to only be called before the crowfund starts and the crowdfund has been scheduled
         require(now < startsAt && isActivated == true);
         startsAt = _startDate;
@@ -179,7 +179,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Change the main contribution wallet
      * @param _wallet The new contribution wallet address
      */
-    function changeWalletAddress(address _wallet) public onlyOwner nonZeroAddress(_wallet) {
+    function changeWalletAddress(address _wallet) external onlyOwner nonZeroAddress(_wallet) {
         wallet = _wallet;
     }
 
@@ -188,7 +188,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _forwardTokensTo The new contribution wallet address
      */
      //
-    function changeForwardAddress(address _forwardTokensTo) public onlyOwner {
+    function changeForwardAddress(address _forwardTokensTo) external onlyOwner {
         forwardTokensTo = _forwardTokensTo;
     }
 
