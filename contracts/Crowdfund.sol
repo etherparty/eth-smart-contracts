@@ -148,6 +148,10 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // Crowdfund cannot be already activated
         require(isActivated == false);
         startsAt = _startDate;
+        // Change the start time on the token contract too, as the vesting period changes        
+        if (!token.changeCrowdfundStartTime(startsAt)) {
+            revert();
+        }
         endsAt = startsAt.add(crowdfundLength);
         isActivated = true;
         assert(startsAt >= now && endsAt > startsAt);
@@ -162,6 +166,10 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // We require this function to only be called before the crowfund starts and the crowdfund has been scheduled
         require(now < startsAt && isActivated == true);
         startsAt = _startDate;
+        // Change the start time on the token contract too, as the vesting period changes
+        if (!token.changeCrowdfundStartTime(startsAt)) {
+            revert();
+        }
         endsAt = startsAt.add(crowdfundLength);
         assert(startsAt >= now && endsAt > startsAt);
         return true;
@@ -249,7 +257,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _amountOfTokens An array of tokens bought synchronized with the index value of _batchOfAddresses
      * @return bool True if successful else false
      */
-     // WANT PRESALE? -- need to ask first
     function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
         require(_batchOfAddresses.length == _amountOfTokens.length);
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
