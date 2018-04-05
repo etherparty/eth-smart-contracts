@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.21;
 
 import "./library/SafeMath.sol";
 import "./library/CanReclaimToken.sol";
@@ -270,7 +270,8 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Called by the owner to kill the contact once the crowdfund is finished and there are no tokens left
      */
     function kill() external onlyOwner {
-        var (amount,) = token.allocations(this);
+        uint256 amount;
+        (amount,) = token.allocations(this);
         require(crowdfundFinalized == true && amount == 0);
         // Send any ETH to the owner
         selfdestruct(owner);
