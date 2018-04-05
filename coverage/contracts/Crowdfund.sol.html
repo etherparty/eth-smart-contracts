@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">91.3% </span>
+        <span class="strong">91.18% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>63/69</span>
+        <span class='fraction'>62/68</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">75% </span>
@@ -35,9 +35,9 @@
         <span class='fraction'>19/19</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">92.21% </span>
+        <span class="strong">92.11% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>71/77</span>
+        <span class='fraction'>70/76</span>
       </div>
     </div>
   </div>
@@ -363,11 +363,7 @@
 318
 319
 320
-321
-322
-323</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+321</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -479,10 +475,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16×</span>
-<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16×</span>
@@ -548,7 +545,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">35×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -702,11 +698,11 @@ contract Crowdfund is NonZero, CanReclaimToken {
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
     // Amount of wei currently raised
     uint256 public weiRaised = 0;
-    // UNIX timestamp of when the crowdfund starts
+    // Timestamp of when the crowdfund starts
     uint256 public startsAt;
-    // UNIX timestamp of when the crowdfund ends
+    // Timestamp of when the crowdfund ends
     uint256 public endsAt;
-    // Instance of the Fuel token contract
+    // Instance of the Token contract
     Token public token;
     // Whether the crowdfund is Activated (scheduled to start) state
     bool public isActivated = false;
@@ -715,14 +711,12 @@ contract Crowdfund is NonZero, CanReclaimToken {
 &nbsp;
 &nbsp;
     // Our own vars
-    // Address of secure wallet to send ETH/SBTC crowdfund contributions to
+    // Address of a secure wallet to send ETH/SBTC crowdfund contributions to
     address public wallet;
     // Address to forward the tokens to at the end of the Crowdfund (can be 0x0 for burning tokens)
     address public forwardTokensTo;
     // Total length of the crowdfund
     uint256 public crowdfundLength;
-    // Total amount of days
-    uint256 public totalDays;
     // If they want to whitelist crowdfund contributors
     bool public withWhitelist;
 &nbsp;
@@ -801,11 +795,12 @@ contract Crowdfund is NonZero, CanReclaimToken {
 &nbsp;
         // Change the owner to the owner address.
         owner = _owner;
+        // If the user wants a whitelist or not
         withWhitelist = _withWhitelist;
-&nbsp;
+        // Wallet where ETH/SBTC will be forwarded to
         wallet = _wallet;
+        // Address where leftover tokens will be forwarded to
         forwardTokensTo = _forwardTokensTo;
-        totalDays = _totalDays;
         // Crowdfund length is in seconds
         crowdfundLength = _totalDays.mul(1 days);
 &nbsp;
@@ -822,7 +817,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
             // Meaning that for the first week, the rate is 100, then then after 7 days, it becomes 50
         }
         // Ensure that the total amount of days is the expected amount
-        <span class="missing-if-branch" title="else path not taken" >E</span>assert(totalAmountOfDays == totalDays);
+        <span class="missing-if-branch" title="else path not taken" >E</span>assert(totalAmountOfDays == _totalDays);
 &nbsp;
         // Create the token contract
         token = new Token(owner, _totalSupply, _allocAddresses, _allocBalances, _timelocks); // Create new Token
@@ -831,7 +826,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
 &nbsp;
     /**
      * @dev Called by the owner or the contract to schedule the crowdfund
-     * @param _startDate The start date UNIX timestamp
+     * @param _startDate The start date Timestamp
      */
     function scheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
         // Crowdfund cannot be already activated
@@ -849,11 +844,11 @@ contract Crowdfund is NonZero, CanReclaimToken {
 &nbsp;
     /**
      * @dev Called by the owner of the contract to reschedule the start of the crowdfund
-     * @param _startDate The start date UNIX timestamp
+     * @param _startDate The start date timestamp
      */
     function reScheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
-        // We require this function to only be called before the crowfund starts and the crowdfund has been scheduled
-        require(now &lt; startsAt &amp;&amp; isActivated == true);
+        // We require this function to only be called 4 hours before the crowfund starts and the crowdfund has been scheduled
+        require(now &lt; startsAt.sub(4 hours) &amp;&amp; isActivated == true);
         startsAt = _startDate;
         // Change the start time on the token contract too, as the vesting period changes
         <span class="missing-if-branch" title="if path not taken" >I</span>if (!token.changeCrowdfundStartTime(startsAt)) {
@@ -876,7 +871,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Change the token forward address. This can be the 0 address.
      * @param _forwardTokensTo The new contribution wallet address
      */
-     //
     function changeForwardAddress(address _forwardTokensTo) external onlyOwner {
         forwardTokensTo = _forwardTokensTo;
     }
@@ -926,7 +920,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @dev Returns token rate depending on the current time
      * @return uint The price of the token rate per 1 ETH
      */
-    function getRate() public view returns (uint price) { // This one is dynamic, would have multiple rounds
+    function getRate() public view returns (uint) { // This one is dynamic, would have multiple rounds
         // Calculate the amount of days passed (division truncates)
         uint256 daysPassed = (now.sub(startsAt)).div(1 days);
         // Safe for loop -- rates is limited to 10 elements, the index never goes above 9, below 0
@@ -941,7 +935,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
     }
 &nbsp;
     /**
-     * @dev Sends presale tokens to any contributors when called by the owner
+     * @dev Sends presale tokens to any contributors when called by the owner can only be done before the crowdfund
      * @param _batchOfAddresses An array of presale contributor addresses
      * @param _amountOfTokens An array of tokens bought synchronized with the index value of _batchOfAddresses
      * @return bool True if successful else false
@@ -1015,7 +1009,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Apr 04 2018 21:28:00 GMT-0700 (PDT)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 05 2018 12:13:41 GMT-0700 (PDT)
 </div>
 </div>
 <script src="../prettify.js"></script>
