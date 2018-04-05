@@ -64,7 +64,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
     // Ensure actions can only happen after crowdfund ends
     modifier onlyAfterCrowdfund() {
-        require(endsAt > 0 && now >= endsAt);
+        require(endsAt > 0 && now > endsAt);
         _;
     }
 
