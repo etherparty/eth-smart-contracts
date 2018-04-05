@@ -99,9 +99,6 @@ contract('Crowdfund', function (accounts) {
     const endsAt = await crowdfund
       .contract
       .endsAt();
-    const daysTotal = await crowdfund
-      .contract
-      .totalDays();
     const crowdfundOwner = await crowdfund.owner();
     const tokenOwner = await token.owner();
     const crowdfundAllocation = await token.allocations(crowdfund.address)
@@ -120,7 +117,6 @@ contract('Crowdfund', function (accounts) {
     assert.equal(wallet, receivingAccount, "The receiving account should be the wallet");
     assert.equal(forwardTokensTo, forwardAddress, "The forward address should match");
     assert.equal(crowdfundLength.eq(twentyEightDaysInSeconds), true, "The crowdfund length should match");
-    assert.equal(daysTotal.eq(28), true, "Total days should match");
     assert.equal(crowdfundOwner, owner, "Crowdfund Owner should match");
     assert.equal(tokenOwner, owner, "Token owner should match");
     assert.equal(startsAt.toNumber(), 0, "StartsAt should match");

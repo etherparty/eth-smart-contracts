@@ -10,7 +10,7 @@ contract Token is StandardToken, Ownable {
 
 /////////////////////// TOKEN INFORMATION ///////////////////////
     string public name = "NAME"; //{{.Name}} NAME CAN BE CHANGED 20 chars max
-    string public symbol = "SYMBOL"; //{{.Symbol}} SYMBOL CAN BE CHANGED 3-5 symbols
+    string public symbol = "SYMBOL"; //{{.Symbol}} SYMBOL CAN BE CHANGED 3-5 characters max
     uint8 public decimals = 18; //{{.Decimal}} CAN BE CHANGED 0 --> 18
 
 
@@ -29,18 +29,20 @@ contract Token is StandardToken, Ownable {
     uint256 public crowdfundSupply;
     // Crowdfund address
     address public crowdfundAddress;
-    // Tokens transfers are locked until the crowdfund is closed -- 
+    // Tokens transfers are locked until the crowdfund is closed
     bool public tokensLocked = true;
     // Crowdfund start Date. Needed for token vesting schedule as a user can reschedule the crowdfund
     uint256 public crowdFundStartTime;
 
 
 /////////////////////// Modifiers ///////////////////////
+    // Modifier that checks if the tokens are unlocked
     modifier onlyUnlocked() {
         require(tokensLocked == false);
         _;
     }
 
+    // Modifier that ensures that the call is coming from the Crowdfund
     modifier onlyCrowdfund() {
         require(msg.sender == crowdfundAddress);
         _;
@@ -71,7 +73,6 @@ contract Token is StandardToken, Ownable {
     }
 
 /////////////////////// TOKEN FUNCTIONS ///////////////////////
-    // We pass in only what we need (like length of crowdfund and the allocations)
     /**
      * @dev Constructor
      * @param _owner The address of the contract owner
@@ -117,6 +118,11 @@ contract Token is StandardToken, Ownable {
         assert(totalTokens == totalSupply_);
     }
 
+    /**
+     * @dev Called by the crowdfund contract to reschedule vesting periods
+     * @param _crowdFundStartTime Timestamp of crowdfund start time
+     * @return bool True if successful
+     */
     function changeCrowdfundStartTime(uint256 _crowdFundStartTime) onlyCrowdfund external returns(bool) {
         crowdFundStartTime = _crowdFundStartTime;
         return true;
@@ -131,7 +137,7 @@ contract Token is StandardToken, Ownable {
     function moveAllocation(address _to, uint256 _amount) public returns(bool) {
         // Crowdfund sate needs to be initialized
         require(crowdFundStartTime > 0);
-        // Vesting for this specific address needs to be done
+        // Vesting for this specific address needs to be done or we let the crowdfund address get his allocation
         require(now > allocations[msg.sender].timeLock + crowdFundStartTime || msg.sender == crowdfundAddress);
         // This function can be called by anyone, but as soon as the allocation goes below 0, it will revert
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount);
@@ -145,9 +151,8 @@ contract Token is StandardToken, Ownable {
      * @dev Unlocks the tokens. Can only be called by the crowdfund contract
      * @return bool True if successful else false;
      */
-    function unlockTokens() external returns (bool) {
+    function unlockTokens() external onlyCrowdfund returns (bool) {
         // This is a 1 way function, tokens can only be in an unlocked state
-        require(msg.sender == crowdfundAddress);
         tokensLocked = false;
         return true;
     }
