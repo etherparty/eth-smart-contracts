@@ -149,7 +149,7 @@ contract('Crowdfund', function (accounts) {
     
 
     // Now schedule the crowdfund for 2 minutes in the futures
-    let firstSchedule = await getTimestampOfCurrentBlock() + 120
+    let firstSchedule = await getTimestampOfCurrentBlock() + 1000 + 4*60*60
 
     // We can schedule the crowdfund first, not reschedule it
     try {
@@ -187,7 +187,7 @@ contract('Crowdfund', function (accounts) {
     
 
     // We can still reschedule the crowdfund
-    let secondSchedule = await getTimestampOfCurrentBlock() + 240
+    let secondSchedule = await getTimestampOfCurrentBlock() + 240 + 4*60*60 // 4 minutes
 
     // call reScheduleCrowdfund NOT from the owner
     try {

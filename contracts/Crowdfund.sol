@@ -164,7 +164,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      */
     function reScheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
         // We require this function to only be called before the crowfund starts and the crowdfund has been scheduled
-        require(now < startsAt && isActivated == true);
+        require(now < startsAt - 4 hours && isActivated == true);
         startsAt = _startDate;
         // Change the start time on the token contract too, as the vesting period changes
         if (!token.changeCrowdfundStartTime(startsAt)) {
