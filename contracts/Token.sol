@@ -138,7 +138,7 @@ contract Token is StandardToken, Ownable {
         // Crowdfund sate needs to be initialized
         require(crowdFundStartTime > 0);
         // Vesting for this specific address needs to be done or we let the crowdfund address get his allocation
-        require(now > allocations[msg.sender].timeLock + crowdFundStartTime || msg.sender == crowdfundAddress);
+        require(now > allocations[msg.sender].timeLock.add(crowdFundStartTime) || msg.sender == crowdfundAddress);
         // This function can be called by anyone, but as soon as the allocation goes below 0, it will revert
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount);
         // Add to the msg.sender's balance
@@ -152,7 +152,7 @@ contract Token is StandardToken, Ownable {
      * @return bool True if successful else false;
      */
     function unlockTokens() external onlyCrowdfund returns (bool) {
-        // This is a 1 way function, tokens can only be in an unlocked state
+        // This is a 1 way function, tokens can only be moved from a locked state to unlocked, and not vice versa
         tokensLocked = false;
         return true;
     }
