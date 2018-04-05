@@ -18,6 +18,6 @@
     "zeppelin-solidity": "1.6.0"
   },
   "devDependencies": {
-    "solidity-coverage": "^0.4.9"
+    "solidity-coverage": "^0.4.15"
   }
 }
