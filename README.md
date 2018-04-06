@@ -13,9 +13,9 @@ Here is a list of all requirements needed for the token creator contract
 
 - [X] Fixed total supply
 
-- [X] Dynamic token allocation (less than 10)
+- [X] Dynamic token allocation (less than or equal to 10)
 
-- [X] Dynamic pricing rounds (less than 10)
+- [X] Dynamic pricing rounds (less than or equal to 10)
 
 - [X] Possibility to Burn unsold tokens or Move tokens to a known address (move allocation with 0 address as _to)
 
@@ -40,7 +40,7 @@ Here is a list of all requirements needed for the token creator contract
 
 - A user should be able to decide where the leftover tokens from the crowdfund are sent. Either they are going to an address or are burnt
 
-- A user should be able to schedule his crowdfund and reschedule it (by doing a function call)
+- A user should be able to schedule his crowdfund and reschedule it (rescheduling only can occur 4 hours before intended crowdfund start time)
 
 - A user should be able to create multiple allocations for his tokens, and every allocation should be able to vest for a variable amount of months.
 

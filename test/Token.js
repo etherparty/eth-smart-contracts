@@ -48,7 +48,7 @@ contract('Token', function (accounts) {
   const totalDays = 28
   const allocationAddresses = [forwardAddress, customer5, customer4, customer2, customer1, "0x0"]
   const allocationBalances = [50000, 100000, 50000, 200000, 100000, 500000] // 500000 * 10^18
-  const allocationTimelocks = [0, 1520121530, 1520121530, 1520121530, 1520121530, 0]
+  const allocationTimelocks = [0, twentyEightDaysInSeconds, 10 * 24 * 60 * 60, 10 * 24 * 60 * 60, 15 * 24 * 60 * 60, 0]
   const totalSupply_ = 1000000
   const withCrowdfund = false
   const crowdfundArgs = [
@@ -122,12 +122,18 @@ contract('Token', function (accounts) {
     } catch (e) {
       ensureException(e)
     }
+    const startTime = await getTimestampOfCurrentBlock() + 100
     // Start the crowdfund now
-    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock(), {
+    await crowdfund.scheduleCrowdfund(startTime, {
+      from: owner
+    })
+    await jumpToTheFuture(101)
+    await crowdfund.changeWalletAddress(owner, {
       from: owner
     })
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+    assert.equal((await token.crowdFundStartTime()).eq(startTime), true, "Token should have the right start time")
     // Buy tokens
     await crowdfund.buyTokens(owner, {
       from: owner,
@@ -259,12 +265,39 @@ contract('Token', function (accounts) {
       totalDays,
       totalSupply_,
       withCrowdfund,
-      allocationAddresses,
-      allocationBalances, [0, currentTime + twentyEightDaysInSeconds, currentTime + 10 * 24 * 60 * 60, currentTime + 10 * 24 * 60 * 60, 15 * 24 * 60 * 60, 0], {
+      [forwardAddress, customer5, customer4, customer2, customer1, "0x0"],
+      allocationBalances, 
+      [0, twentyEightDaysInSeconds, 10 * 24 * 60 * 60, 10 * 24 * 60 * 60, 15 * 24 * 60 * 60, 0], {
         from: owner
       }
     )
     const token = await Token.at(await crowdfund.token());
+    // First allocation should be able to move (timelock of 0) -- but won't as the crowdfund is not scheduled
+    try {
+      await token.moveAllocation(customer4, web3.toWei(1, 'ether'), {
+        from: customer5
+      })
+    } catch (e) {
+      ensureException(e)
+    }
+    
+    // Start the crowdfund now
+    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {
+      from: owner
+    })
+    await jumpToTheFuture(102)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
+
+    assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+    // Buy tokens (Means the crowdfund allocation works)
+    await crowdfund.buyTokens(owner, {
+      from: owner,
+      value: web3.toWei('1', 'ether')
+    })
+    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+    assert.equal((await token.allocations(crowdfund.address))[0].eq((await token.crowdfundSupply()).minus(bigNumberize(prices[0], 18))), true, "Should equal")
 
     // First allocation can move (timelock of 0)
     await token.moveAllocation(customer5, web3.toWei(1, 'ether'), {
@@ -296,25 +329,12 @@ contract('Token', function (accounts) {
     await crowdfund.changeWalletAddress(owner, {
       from: owner
     })
-
     await token.moveAllocation(customer3, web3.toWei(1, 'ether'), {
       from: customer4
     })
     assert.equal((await token.balanceOf(customer3)).eq(web3.toWei(1, 'ether')), true, "Should equal")
 
-    // Start the crowdfund now
-    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock(), {
-      from: owner
-    })
 
-    assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
-    // Buy tokens (Means the crowdfund allocation works)
-    await crowdfund.buyTokens(owner, {
-      from: owner,
-      value: web3.toWei('1', 'ether')
-    })
-    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
-    assert.equal((await token.allocations(crowdfund.address))[0].eq((await token.crowdfundSupply()).minus(bigNumberize(prices[0], 18))), true, "Should equal")
 
     // Move all allocation from a specific allocation
     await jumpToTheFuture(twentyEightDaysInSeconds + 2000)

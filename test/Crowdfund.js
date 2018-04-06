@@ -62,10 +62,10 @@ contract('Crowdfund', function (accounts) {
   ]
   const allocationTimelocks = [
     0,
-    100000000,
-    1212,
-    3332,
-    33233,
+    518400, // 6 months
+    86400, // 1 months
+    172800, // 2 months
+    600, // 10 minutes
     0
   ]
   const totalSupply = 1000000
@@ -99,9 +99,6 @@ contract('Crowdfund', function (accounts) {
     const endsAt = await crowdfund
       .contract
       .endsAt();
-    const daysTotal = await crowdfund
-      .contract
-      .totalDays();
     const crowdfundOwner = await crowdfund.owner();
     const tokenOwner = await token.owner();
     const crowdfundAllocation = await token.allocations(crowdfund.address)
@@ -120,7 +117,6 @@ contract('Crowdfund', function (accounts) {
     assert.equal(wallet, receivingAccount, "The receiving account should be the wallet");
     assert.equal(forwardTokensTo, forwardAddress, "The forward address should match");
     assert.equal(crowdfundLength.eq(twentyEightDaysInSeconds), true, "The crowdfund length should match");
-    assert.equal(daysTotal.eq(28), true, "Total days should match");
     assert.equal(crowdfundOwner, owner, "Crowdfund Owner should match");
     assert.equal(tokenOwner, owner, "Token owner should match");
     assert.equal(startsAt.toNumber(), 0, "StartsAt should match");
@@ -145,9 +141,11 @@ contract('Crowdfund', function (accounts) {
     }
     assert.equal((await crowdfund.startsAt()).eq(bigNumberize(0, 18)), true, "Should equal 0")
     assert.equal((await crowdfund.endsAt()).eq(bigNumberize(0, 18)), true, "Should equal 0")
+    assert.equal((await token.crowdFundStartTime()).eq(bigNumberize(0, 0)), true, "Token should have the right start time")
+    
 
     // Now schedule the crowdfund for 2 minutes in the futures
-    let firstSchedule = await getTimestampOfCurrentBlock() + 120
+    let firstSchedule = await getTimestampOfCurrentBlock() + 1000 + 4*60*60
 
     // We can schedule the crowdfund first, not reschedule it
     try {
@@ -155,6 +153,8 @@ contract('Crowdfund', function (accounts) {
     } catch (e) {
       ensureException(e)
     }
+    assert.equal((await token.crowdFundStartTime()).eq(0), true, "Token should have the right start time")
+    
 
     // call schedule crowdfund NOT from the owner
     try {
@@ -162,6 +162,8 @@ contract('Crowdfund', function (accounts) {
     } catch (e) {
       ensureException(e)
     }
+    assert.equal((await token.crowdFundStartTime()).eq(0), true, "Token should have the right start time")
+    
 
     await crowdfund.scheduleCrowdfund(firstSchedule)
 
@@ -177,9 +179,11 @@ contract('Crowdfund', function (accounts) {
     assert.equal((await token.balanceOf(owner)).eq(bigNumberize(0, 0)), true, "Should equal")
     assert.equal((await crowdfund.startsAt()).eq(bigNumberize(firstSchedule, 0)), true, "Should equal the firstSchedule")
     assert.equal((await crowdfund.endsAt()).eq(bigNumberize(firstSchedule + totalDays * 24 * 60 * 60, 0)), true, "Should equal days total added")
+    assert.equal((await token.crowdFundStartTime()).eq(bigNumberize(firstSchedule, 0)), true, "Token should have the right start time")
+    
 
     // We can still reschedule the crowdfund
-    let secondSchedule = await getTimestampOfCurrentBlock() + 240
+    let secondSchedule = await getTimestampOfCurrentBlock() + 240 + 4*60*60 // 4 minutes
 
     // call reScheduleCrowdfund NOT from the owner
     try {
@@ -188,6 +192,8 @@ contract('Crowdfund', function (accounts) {
       ensureException(e)
     }
     await crowdfund.reScheduleCrowdfund(secondSchedule)
+    assert.equal((await token.crowdFundStartTime()).eq(bigNumberize(secondSchedule, 0)), true, "Token should have the right start time")
+    
 
     assert.equal((await crowdfund.startsAt()).eq(bigNumberize(secondSchedule, 0)), true, "Should equal the secondSchedule")
     assert.equal((await crowdfund.endsAt()).eq(bigNumberize(secondSchedule + totalDays * 24 * 60 * 60, 0)), true, "Should equal days total added II")
@@ -300,7 +306,7 @@ contract('Crowdfund', function (accounts) {
   });
 
   it("BuyTokens() and function (): It should let a buyer buy tokens", async() => {
-    const wallet = '0x99edCE9CeC1296590B67402A73c780bAeB51c4ad'
+    const wallet = '0xac0782170Acc520e0EF968B149b1d432352f97a2'
     const crowdfund = await Crowdfund.new(...crowdfundArgs, {from: owner})
     const token = await Token.at(await crowdfund.token());
 
@@ -314,21 +320,23 @@ contract('Crowdfund', function (accounts) {
       ensureException(e)
     }
     // Start the crowdfund now
-    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {from: owner})
+    const timeToStart = await getTimestampOfCurrentBlock() + 100
+    await crowdfund.scheduleCrowdfund(timeToStart, {from: owner})
 
     await jumpToTheFuture(500)
     await crowdfund.changeWalletAddress(wallet, {from: owner})
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+    assert.equal(await crowdfund.startsAt(), timeToStart, "Crowdfund should have the right start date")
 
     // Buy token when active using buyTokens()
     await crowdfund.buyTokens(owner, {
       from: owner,
       value: web3.toWei('1', 'ether')
     })
-    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
-    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal")
-    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)), true, "Should equal")
+    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal balance")
+    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal: weiraised")
+    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)), true, "Should equal: wallet balance")
 
     // Buy token when active using function()
     await web3
@@ -414,12 +422,15 @@ contract('Crowdfund', function (accounts) {
       ensureException(e)
     }
     // Start the crowdfund now
-    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {from: owner})
+    const timeToStart = await getTimestampOfCurrentBlock() + 100
+    await crowdfund.scheduleCrowdfund(timeToStart, {from: owner})
 
     await jumpToTheFuture(500)
     await crowdfund.changeWalletAddress(wallet, {from: owner})
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+    assert.equal((await token.crowdFundStartTime()).eq(timeToStart), true, "Token should have the right start time")
+    
 
     // Buy token when active using buyTokens()
     assert.equal(((await token.allocations(crowdfund.address))[0]).eq(bigNumberize(1000, 18)), true, "Should equal")
@@ -574,6 +585,7 @@ contract('Crowdfund', function (accounts) {
 
     // deliver presale tokens before the crowdfund (scheduled)
     await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {from: owner})
+    // await jumpToTheFuture(500)
     await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
     for (let i = 0; i < presaleAddresses.length; i++) {
       const balance = await token.balanceOf(presaleAddresses[i]);
@@ -788,6 +800,11 @@ contract('Crowdfund', function (accounts) {
     await crowdfund.removeFromWhitelist(customer3, {from: owner})
     await crowdfund.removeFromWhitelist(customer4, {from: owner})
     await crowdfund.removeFromWhitelist(customer5, {from: owner})
+    await crowdfund.addManyToWhitelist([customer3, customer4, customer5])
+    assert.equal((await crowdfund.whitelist(customer3)), true, "Should be true")
+    assert.equal((await crowdfund.whitelist(customer4)), true, "Should be true")
+    assert.equal((await crowdfund.whitelist(customer5)), true, "Should be true")
+    await crowdfund.removeManyFromWhitelist([customer3, customer4, customer5], {from: owner})
     assert.equal((await crowdfund.whitelist(customer3)), false, "Should be false")
     assert.equal((await crowdfund.whitelist(customer4)), false, "Should be false")
     assert.equal((await crowdfund.whitelist(customer5)), false, "Should be false")
@@ -803,5 +820,20 @@ contract('Crowdfund', function (accounts) {
       ensureException(e)
     }
     assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
+  });
+ 
+ it("changeCrowdfundStartTime, Should not let me call this function", async() => {
+
+    const crowdfund = await Crowdfund.new(...crowdfundArgs, {from: owner})
+    const token = await Token.at(await crowdfund.token());
+
+    // Buy tokens when not active Buying tokens should fail
+    try {
+      await token.changeCrowdfundStartTime(1455545454, {
+        from: customer1
+      })
+    } catch (e) {
+      ensureException(e)
+    }
   });
 });
