@@ -147,7 +147,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // Crowdfund cannot be already activated
         require(isActivated == false);
         startsAt = _startDate;
-        // Change the start time on the token contract too, as the vesting period changes        
+        // Change the start time on the token contract too, as the vesting period changes
         if (!token.changeCrowdfundStartTime(startsAt)) {
             revert();
         }
@@ -205,7 +205,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         if (!token.moveAllocation(_to, tokens)) {
             revert();
         }
-        TokenPurchase(_to, weiAmount, tokens);
+        emit TokenPurchase(_to, weiAmount, tokens);
     }
 
     /**

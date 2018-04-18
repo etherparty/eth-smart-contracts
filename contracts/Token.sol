@@ -143,7 +143,7 @@ contract Token is StandardToken, Ownable {
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount);
         // Add to the msg.sender's balance
         balances[_to] = balances[_to].add(_amount);
-        Transfer(0x0, _to, _amount);
+        emit Transfer(0x0, _to, _amount);
         return true;
     }
 
