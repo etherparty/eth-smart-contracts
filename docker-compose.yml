@@ -1,0 +1,9 @@
+version: '3'
+services:
+  oyente:
+    image: "oyente:latest"
+    ports:
+    - "8000:8000"
+    tty: true
+    volumes:
+    - ./contracts:/oyente/contracts

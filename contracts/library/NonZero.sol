@@ -1,12 +1,12 @@
-pragma solidity ^0.4.9;
+pragma solidity 0.4.21;
 /**
  * @title NonZero
  */
 contract NonZero {
 
-// Functions with this modifier fail if he 
-    modifier nonZeroAddress(address _to) {
-        require(_to != 0x0);
+// Functions with this modifier fail if he
+    modifier nonZeroAddress(address _address) {
+        require(_address != address(0));
         _;
     }
 

@@ -12,7 +12,12 @@
   "author": "Etherparty",
   "license": "ISC",
   "dependencies": {
-    "bignumber.js": "^5.0.0",
-    "zeppelin-solidity": "^1.4.0"
+    "babel-polyfill": "^6.26.0",
+    "babel-register": "^6.26.0",
+    "bignumber.js": "6.0.0",
+    "zeppelin-solidity": "1.6.0"
+  },
+  "devDependencies": {
+    "solidity-coverage": "^0.4.15"
   }
 }

@@ -1,111 +1,322 @@
-pragma solidity ^0.4.15;
+pragma solidity 0.4.21;
 
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
-import "./helpers/NonZero.sol";
+import "./library/SafeMath.sol";
+import "./library/CanReclaimToken.sol";
+import "./library/NonZero.sol";
 import "./Token.sol";
 
-contract Crowdfund is NonZero, Ownable {
-    
+
+contract Crowdfund is NonZero, CanReclaimToken {
+
     using SafeMath for uint;
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
-
-    // Address of the deployed FUEL Token contract
-    address public tokenAddress;
-    // Address of secure wallet to send crowdfund contributions to
-    address public wallet;
-
     // Amount of wei currently raised
     uint256 public weiRaised = 0;
-    // UNIX timestamp of when the crowdfund starts
+    // Timestamp of when the crowdfund starts
     uint256 public startsAt;
-    // UNIX timestamp of when the crowdfund ends
+    // Timestamp of when the crowdfund ends
     uint256 public endsAt;
-
-    // Instance of the Fuel token contract
+    // Instance of the Token contract
     Token public token;
-    
+    // Whether the crowdfund is Activated (scheduled to start) state
+    bool public isActivated = false;
+    // Flag keeping track of crowdsale status. Ensures closeCrowdfund() can only be called once and kill() only after closing the crowdfund
+    bool public crowdfundFinalized = false;
+
+
+    // Our own vars
+    // Address of a secure wallet to send ETH/SBTC crowdfund contributions to
+    address public wallet;
+    // Address to forward the tokens to at the end of the Crowdfund (can be 0x0 for burning tokens)
+    address public forwardTokensTo;
+    // Total length of the crowdfund
+    uint256 public crowdfundLength;
+    // If they want to whitelist crowdfund contributors
+    bool public withWhitelist;
+
+
+    // This struct keeps the rates of tokens per epoch
+    struct Rate {
+        uint256 price;
+        uint256 amountOfDays;
+    }
+
+    // Array of token rates for each epoch
+    Rate[] public rates;
+
+    mapping (address => bool) public whitelist;
+
+
 /////////////////////// EVENTS ///////////////////////
 
-    // Emitted upon owner changing the wallet address
-    event WalletAddressChanged(address _wallet);
-    // Emitted upon crowdfund being finalized
-    event AmountRaised(address beneficiary, uint amountRaised);
     // Emmitted upon purchasing tokens
     event TokenPurchase(address indexed purchaser, uint256 value, uint256 amount);
 
 /////////////////////// MODIFIERS ///////////////////////
-
     // Ensure the crowdfund is ongoing
-    modifier crowdfundIsActive() {
-        assert(now >= startsAt && now <= endsAt);
+    modifier duringCrowdfund() {
+        require(now >= startsAt && now <= endsAt);
         _;
     }
 
     // Ensure actions can only happen after crowdfund ends
-    modifier notBeforeCrowdfundEnds(){
-        require(now >= endsAt);
+    modifier onlyAfterCrowdfund() {
+        require(endsAt > 0 && now > endsAt);
         _;
     }
 
+    // Ensure actions can only happen before the crowdfund
+    modifier onlyBeforeCrowdfund() {
+        require(now <= startsAt);
+        _;
+    }
+
+    // Modifier that looks if this is whitelisted
+    modifier isWhitelisted(address _beneficiary) {
+        if (withWhitelist == true) {
+            require(whitelist[_beneficiary]);
+        }
+        _;
+    }
 
 /////////////////////// CROWDFUND FUNCTIONS ///////////////////////
-    
-    // Constructor
-    function Crowdfund(address _tokenAddress) {
-        wallet = 0x45d75330a9ba60c3ca01defac938be235acfdc07;    // Etherparty Wallet Address
-        startsAt = 1506873600;                                  // Oct 1 2017, 9:00 AM PDT
-        endsAt = 1509292800;                                // ~4 weeks / 28 days later: Oct 29, 9 AM PST
-        tokenAddress = _tokenAddress;                           // FUEL token Address
-        token = Token(tokenAddress);
-    }
+    /**
+     * @dev Constructor
+     * @param _owner The address of the contract owner
+     * @param _epochs Array of the length of epoch per specific token price (in days)
+     * @param _prices Array of the prices for each price epoch
+     * @param _wallet Wallet address where ETH/SBTC will be transferred into
+     * @param _forwardTokensTo Address to forward the tokens to
+     * @param _totalDays Length of the crowdfund in days
+     * @param _totalSupply Total Supply of the token
+     * @param _allocAddresses Array of allocation addresses
+     * @param _allocBalances Array of allocation balances
+     * @param _timelocks Array of timelocks for all the allocations
+     */
+    function Crowdfund(
+        address _owner,
+        uint256[] memory _epochs,
+        uint256[] memory _prices,
+        address _wallet,
+        address _forwardTokensTo,
+        uint256 _totalDays,
+        uint256 _totalSupply,
+        bool _withWhitelist,
+        address[] memory _allocAddresses,
+        uint256[] memory _allocBalances,
+        uint256[] memory _timelocks
+        ) public {
 
-    // Change main contribution wallet
-    function changeWalletAddress(address _wallet) onlyOwner {
+        // Change the owner to the owner address.
+        owner = _owner;
+        // If the user wants a whitelist or not
+        withWhitelist = _withWhitelist;
+        // Wallet where ETH/SBTC will be forwarded to
         wallet = _wallet;
-        WalletAddressChanged(_wallet);
+        // Address where leftover tokens will be forwarded to
+        forwardTokensTo = _forwardTokensTo;
+        // Crowdfund length is in seconds
+        crowdfundLength = _totalDays.mul(1 days);
+
+        // Ensure the prices per epoch passed in are the same length and limit the size of the array
+        require(_epochs.length == _prices.length && _prices.length <= 10);
+
+        // Keep track of the amount of days -- this will determine which epoch we are in
+        uint256 totalAmountOfDays = 0;
+        // Push all of them to the rates array
+        for (uint8 i = 0; i < _epochs.length; i++) {
+            totalAmountOfDays = totalAmountOfDays.add(_epochs[i]);
+            rates.push(Rate(_prices[i], totalAmountOfDays));
+            // So here we will have [rate(100, 7), rate(50, 14)]
+            // Meaning that for the first week, the rate is 100, then then after 7 days, it becomes 50
+        }
+        // Ensure that the total amount of days is the expected amount
+        assert(totalAmountOfDays == _totalDays);
+
+        // Create the token contract
+        token = new Token(owner, _totalSupply, _allocAddresses, _allocBalances, _timelocks); // Create new Token
+
     }
 
-
-    // Function to buy Fuel. One can also buy FUEL by calling this function directly and send 
-    // it to another destination.
-    function buyTokens(address _to) crowdfundIsActive nonZeroAddress(_to) nonZeroValue payable {
-        uint256 weiAmount = msg.value;
-        uint256 tokens = weiAmount * getRate();
-        weiRaised = weiRaised.add(weiAmount);
-        wallet.transfer(weiAmount);
-        if (!token.transferFromCrowdfund(_to, tokens)) {
+    /**
+     * @dev Called by the owner or the contract to schedule the crowdfund
+     * @param _startDate The start date Timestamp
+     */
+    function scheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
+        // Crowdfund cannot be already activated
+        require(isActivated == false);
+        startsAt = _startDate;
+        // Change the start time on the token contract too, as the vesting period changes
+        if (!token.changeCrowdfundStartTime(startsAt)) {
             revert();
         }
-        TokenPurchase(_to, weiAmount, tokens);
+        endsAt = startsAt.add(crowdfundLength);
+        isActivated = true;
+        assert(startsAt >= now && endsAt > startsAt);
+        return true;
     }
 
-    // Function to close the crowdfund. Any unsold FUEL will go to the platform to be sold at 1$
-    function closeCrowdfund() external notBeforeCrowdfundEnds onlyOwner returns (bool success) {
-        AmountRaised(wallet, weiRaised);
-        token.finalizeCrowdfund();
+    /**
+     * @dev Called by the owner of the contract to reschedule the start of the crowdfund
+     * @param _startDate The start date timestamp
+     *
+     */
+    function reScheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
+        // We require this function to only be called 4 hours before the crowfund starts and the crowdfund has been scheduled
+        require(now < startsAt.sub(4 hours) && isActivated == true);
+        startsAt = _startDate;
+        // Change the start time on the token contract too, as the vesting period changes
+        if (!token.changeCrowdfundStartTime(startsAt)) {
+            revert();
+        }
+        endsAt = startsAt.add(crowdfundLength);
+        assert(startsAt >= now && endsAt > startsAt);
+        return true;
+    }
+
+    /**
+     * @dev Change the main contribution wallet
+     * @param _wallet The new contribution wallet address
+     */
+    function changeWalletAddress(address _wallet) external onlyOwner nonZeroAddress(_wallet) {
+        wallet = _wallet;
+    }
+
+    /**
+     * @dev Change the token forward address. This can be the 0 address.
+     * @param _forwardTokensTo The new contribution wallet address
+     */
+    function changeForwardAddress(address _forwardTokensTo) external onlyOwner {
+        forwardTokensTo = _forwardTokensTo;
+    }
+
+    /**
+     * @dev Buys tokens at the current rate
+     * @param _to The address the bought tokens are sent to
+     */
+    function buyTokens(address _to) public duringCrowdfund nonZeroAddress(_to) nonZeroValue isWhitelisted(msg.sender) payable {
+        uint256 weiAmount = msg.value;
+        // Get the total rate of tokens
+        uint256 tokens = weiAmount.mul(getRate());
+        weiRaised = weiRaised.add(weiAmount);
+        // Transfer out the ETH to our wallet
+        wallet.transfer(weiAmount);
+        // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
+        if (!token.moveAllocation(_to, tokens)) {
+            revert();
+        }
+        emit TokenPurchase(_to, weiAmount, tokens);
+    }
+
+    /**
+     * @dev Closes the crowdfund only after the crowdfund ends and by the owner
+     * @return bool True if closed successfully else false
+     */
+    function closeCrowdfund() external onlyAfterCrowdfund onlyOwner returns (bool success) {
+        require(crowdfundFinalized == false);
+        uint256 amount;
+        (amount,) = token.allocations(this);
+        if (amount > 0) {
+            // Transfer all of the tokens out to the final address (if burning, send to 0x0)
+            if (!token.moveAllocation(forwardTokensTo, amount)) {
+                revert();
+            }
+        }
+        // Unlock the tokens
+        if (!token.unlockTokens()) {
+            revert();
+        }
+        crowdfundFinalized = true;
         return true;
     }
 
 /////////////////////// CONSTANT FUNCTIONS ///////////////////////
+    /**
+     * @dev Returns token rate depending on the current time
+     * @return uint The price of the token rate per 1 ETH
+     */
+    function getRate() public view returns (uint) { // This one is dynamic, would have multiple rounds
+        // Calculate the amount of days passed (division truncates)
+        uint256 daysPassed = (now.sub(startsAt)).div(1 days);
+        // Safe for loop -- rates is limited to 10 elements, the index never goes above 9, below 0
+        for (uint8 i = 0; i < rates.length; i++) {
+            // if the days passed since the start is below the amountOfdays we use that rate
+            if (daysPassed < rates[i].amountOfDays) {
+                return rates[i].price;
+            }
+        }
+        // If we reach here, means this is after the crowdfund ended
+        return 0;
+    }
 
-    // Returns FUEL disbursed per 1 ETH depending on current time
-    function getRate() public constant returns (uint price) {
-        if (now > (startsAt + 3 weeks)) {
-           return 1275; // week 4
-        } else if (now > (startsAt + 2 weeks)) {
-           return 1700; // week 3
-        } else if (now > (startsAt + 1 weeks)) {
-           return 2250; // week 2
-        } else {
-           return 3000; // week 1
+    /**
+     * @dev Sends presale tokens to any contributors when called by the owner can only be done before the crowdfund
+     * @param _batchOfAddresses An array of presale contributor addresses
+     * @param _amountOfTokens An array of tokens bought synchronized with the index value of _batchOfAddresses
+     * @return bool True if successful else false
+     */
+    function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
+        require(_batchOfAddresses.length == _amountOfTokens.length);
+        for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
+            if (!token.moveAllocation(_batchOfAddresses[i], _amountOfTokens[i])) {
+                revert();
+            }
+        }
+        return true;
+    }
+    /**
+     * @dev Called by the owner to kill the contact once the crowdfund is finished and there are no tokens left
+     */
+    function kill() external onlyOwner {
+        uint256 amount;
+        (amount,) = token.allocations(this);
+        require(crowdfundFinalized == true && amount == 0);
+        // Send any ETH to the owner
+        selfdestruct(owner);
+    }
+
+    /**
+    * @dev Adds single address to whitelist.
+    * @param _beneficiary Address to be added to the whitelist
+    */
+    function addToWhitelist(address _beneficiary) external onlyOwner {
+        whitelist[_beneficiary] = true;
+    }
+
+    /**
+    * @dev Adds list of addresses to whitelist.
+    * @param _beneficiaries Addresses to be added to the whitelist
+    *
+    */
+    function addManyToWhitelist(address[] _beneficiaries) external onlyOwner {
+        for (uint256 i = 0; i < _beneficiaries.length; i++) {
+            whitelist[_beneficiaries[i]] = true;
         }
     }
 
-    // To contribute, send a value transaction to the Crowdfund Address.
-    // Please include at least 100 000 gas.
-    function () payable {
+    /**
+    * @dev Removes list of addresses to whitelist
+    * @param _beneficiaries Addresses to be removed from the whitelist
+    */
+    function removeManyFromWhitelist(address[] _beneficiaries) external onlyOwner {
+        for (uint256 i = 0; i < _beneficiaries.length; i++) {
+            whitelist[_beneficiaries[i]] = false;
+        }
+    }
+
+    /**
+    * @dev Removes single address from whitelist.
+    * @param _beneficiary Address to be removed to the whitelist
+    */
+    function removeFromWhitelist(address _beneficiary) external onlyOwner {
+        whitelist[_beneficiary] = false;
+    }
+
+    /**
+     * @dev Allows for users to send ETH to buy tokens
+     */
+    function () external payable {
         buyTokens(msg.sender);
     }
 }

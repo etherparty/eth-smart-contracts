@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/Crowdfund.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> Crowdfund.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">91.18% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>62/68</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">75% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>33/44</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>19/19</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">92.11% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>70/76</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">29×</span>
+<span class="cline-any cline-yes">20×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">35×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">33×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity 0.4.21;
+&nbsp;
+import "./library/SafeMath.sol";
+import "./library/CanReclaimToken.sol";
+import "./library/NonZero.sol";
+import "./Token.sol";
+&nbsp;
+&nbsp;
+contract Crowdfund is NonZero, CanReclaimToken {
+&nbsp;
+    using SafeMath for uint;
+&nbsp;
+/////////////////////// VARIABLE INITIALIZATION ///////////////////////
+    // Amount of wei currently raised
+    uint256 public weiRaised = 0;
+    // Timestamp of when the crowdfund starts
+    uint256 public startsAt;
+    // Timestamp of when the crowdfund ends
+    uint256 public endsAt;
+    // Instance of the Token contract
+    Token public token;
+    // Whether the crowdfund is Activated (scheduled to start) state
+    bool public isActivated = false;
+    // Flag keeping track of crowdsale status. Ensures closeCrowdfund() can only be called once and kill() only after closing the crowdfund
+    bool public crowdfundFinalized = false;
+&nbsp;
+&nbsp;
+    // Our own vars
+    // Address of a secure wallet to send ETH/SBTC crowdfund contributions to
+    address public wallet;
+    // Address to forward the tokens to at the end of the Crowdfund (can be 0x0 for burning tokens)
+    address public forwardTokensTo;
+    // Total length of the crowdfund
+    uint256 public crowdfundLength;
+    // If they want to whitelist crowdfund contributors
+    bool public withWhitelist;
+&nbsp;
+&nbsp;
+    // This struct keeps the rates of tokens per epoch
+    struct Rate {
+        uint256 price;
+        uint256 amountOfDays;
+    }
+&nbsp;
+    // Array of token rates for each epoch
+    Rate[] public rates;
+&nbsp;
+    mapping (address =&gt; bool) public whitelist;
+&nbsp;
+&nbsp;
+/////////////////////// EVENTS ///////////////////////
+&nbsp;
+    // Emmitted upon purchasing tokens
+    event TokenPurchase(address indexed purchaser, uint256 value, uint256 amount);
+&nbsp;
+/////////////////////// MODIFIERS ///////////////////////
+    // Ensure the crowdfund is ongoing
+    modifier duringCrowdfund() {
+        require(now &gt;= startsAt &amp;&amp; now &lt;= endsAt);
+        _;
+    }
+&nbsp;
+    // Ensure actions can only happen after crowdfund ends
+    modifier onlyAfterCrowdfund() {
+        require(endsAt &gt; 0 &amp;&amp; now &gt; endsAt);
+        _;
+    }
+&nbsp;
+    // Ensure actions can only happen before the crowdfund
+    modifier onlyBeforeCrowdfund() {
+        require(now &lt;= startsAt);
+        _;
+    }
+&nbsp;
+    // Modifier that looks if this is whitelisted
+    modifier isWhitelisted(address _beneficiary) {
+        if (withWhitelist == true) {
+            require(whitelist[_beneficiary]);
+        }
+        _;
+    }
+&nbsp;
+/////////////////////// CROWDFUND FUNCTIONS ///////////////////////
+    /**
+     * @dev Constructor
+     * @param _owner The address of the contract owner
+     * @param _epochs Array of the length of epoch per specific token price (in days)
+     * @param _prices Array of the prices for each price epoch
+     * @param _wallet Wallet address where ETH/SBTC will be transferred into
+     * @param _forwardTokensTo Address to forward the tokens to
+     * @param _totalDays Length of the crowdfund in days
+     * @param _totalSupply Total Supply of the token
+     * @param _allocAddresses Array of allocation addresses
+     * @param _allocBalances Array of allocation balances
+     * @param _timelocks Array of timelocks for all the allocations
+     */
+    function Crowdfund(
+        address _owner,
+        uint256[] memory _epochs,
+        uint256[] memory _prices,
+        address _wallet,
+        address _forwardTokensTo,
+        uint256 _totalDays,
+        uint256 _totalSupply,
+        bool _withWhitelist,
+        address[] memory _allocAddresses,
+        uint256[] memory _allocBalances,
+        uint256[] memory _timelocks
+        ) public {
+&nbsp;
+        // Change the owner to the owner address.
+        owner = _owner;
+        // If the user wants a whitelist or not
+        withWhitelist = _withWhitelist;
+        // Wallet where ETH/SBTC will be forwarded to
+        wallet = _wallet;
+        // Address where leftover tokens will be forwarded to
+        forwardTokensTo = _forwardTokensTo;
+        // Crowdfund length is in seconds
+        crowdfundLength = _totalDays.mul(1 days);
+&nbsp;
+        // Ensure the prices per epoch passed in are the same length and limit the size of the array
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(_epochs.length == _prices.length &amp;&amp; _prices.length &lt;= 10);
+&nbsp;
+        // Keep track of the amount of days -- this will determine which epoch we are in
+        uint256 totalAmountOfDays = 0;
+        // Push all of them to the rates array
+        for (uint8 i = 0; i &lt; _epochs.length; i++) {
+            totalAmountOfDays = totalAmountOfDays.add(_epochs[i]);
+            rates.push(Rate(_prices[i], totalAmountOfDays));
+            // So here we will have [rate(100, 7), rate(50, 14)]
+            // Meaning that for the first week, the rate is 100, then then after 7 days, it becomes 50
+        }
+        // Ensure that the total amount of days is the expected amount
+        <span class="missing-if-branch" title="else path not taken" >E</span>assert(totalAmountOfDays == _totalDays);
+&nbsp;
+        // Create the token contract
+        token = new Token(owner, _totalSupply, _allocAddresses, _allocBalances, _timelocks); // Create new Token
+&nbsp;
+    }
+&nbsp;
+    /**
+     * @dev Called by the owner or the contract to schedule the crowdfund
+     * @param _startDate The start date Timestamp
+     */
+    function scheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
+        // Crowdfund cannot be already activated
+        require(isActivated == false);
+        startsAt = _startDate;
+        // Change the start time on the token contract too, as the vesting period changes        
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!token.changeCrowdfundStartTime(startsAt)) {
+<span class="cstat-no" title="statement not covered" >            revert()</span>;
+        }
+        endsAt = startsAt.add(crowdfundLength);
+        isActivated = true;
+        assert(startsAt &gt;= now &amp;&amp; endsAt &gt; startsAt);
+        return true;
+    }
+&nbsp;
+    /**
+     * @dev Called by the owner of the contract to reschedule the start of the crowdfund
+     * @param _startDate The start date timestamp
+     */
+    function reScheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
+        // We require this function to only be called 4 hours before the crowfund starts and the crowdfund has been scheduled
+        require(now &lt; startsAt.sub(4 hours) &amp;&amp; isActivated == true);
+        startsAt = _startDate;
+        // Change the start time on the token contract too, as the vesting period changes
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!token.changeCrowdfundStartTime(startsAt)) {
+<span class="cstat-no" title="statement not covered" >            revert()</span>;
+        }
+        endsAt = startsAt.add(crowdfundLength);
+        <span class="missing-if-branch" title="else path not taken" >E</span>assert(startsAt &gt;= now &amp;&amp; endsAt &gt; startsAt);
+        return true;
+    }
+&nbsp;
+    /**
+     * @dev Change the main contribution wallet
+     * @param _wallet The new contribution wallet address
+     */
+    function changeWalletAddress(address _wallet) external onlyOwner nonZeroAddress(_wallet) {
+        wallet = _wallet;
+    }
+&nbsp;
+    /**
+     * @dev Change the token forward address. This can be the 0 address.
+     * @param _forwardTokensTo The new contribution wallet address
+     */
+    function changeForwardAddress(address _forwardTokensTo) external onlyOwner {
+        forwardTokensTo = _forwardTokensTo;
+    }
+&nbsp;
+    /**
+     * @dev Buys tokens at the current rate
+     * @param _to The address the bought tokens are sent to
+     */
+    function buyTokens(address _to) public duringCrowdfund nonZeroAddress(_to) nonZeroValue isWhitelisted(msg.sender) payable {
+        uint256 weiAmount = msg.value;
+        // Get the total rate of tokens
+        uint256 tokens = weiAmount.mul(getRate());
+        weiRaised = weiRaised.add(weiAmount);
+        // Transfer out the ETH to our wallet
+        wallet.transfer(weiAmount);
+        // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!token.moveAllocation(_to, tokens)) {
+<span class="cstat-no" title="statement not covered" >            revert()</span>;
+        }
+        TokenPurchase(_to, weiAmount, tokens);
+    }
+&nbsp;
+    /**
+     * @dev Closes the crowdfund only after the crowdfund ends and by the owner
+     * @return bool True if closed successfully else false
+     */
+    function closeCrowdfund() external onlyAfterCrowdfund onlyOwner returns (bool success) {
+        require(crowdfundFinalized == false);
+        uint256 amount;
+        (amount,) = token.allocations(this);
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (amount &gt; 0) {
+            // Transfer all of the tokens out to the final address (if burning, send to 0x0)
+            <span class="missing-if-branch" title="if path not taken" >I</span>if (!token.moveAllocation(forwardTokensTo, amount)) {
+<span class="cstat-no" title="statement not covered" >                revert()</span>;
+            }
+        }
+        // Unlock the tokens
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!token.unlockTokens()) {
+<span class="cstat-no" title="statement not covered" >            revert()</span>;
+        }
+        crowdfundFinalized = true;
+        return true;
+    }
+&nbsp;
+/////////////////////// CONSTANT FUNCTIONS ///////////////////////
+    /**
+     * @dev Returns token rate depending on the current time
+     * @return uint The price of the token rate per 1 ETH
+     */
+    function getRate() public view returns (uint) { // This one is dynamic, would have multiple rounds
+        // Calculate the amount of days passed (division truncates)
+        uint256 daysPassed = (now.sub(startsAt)).div(1 days);
+        // Safe for loop -- rates is limited to 10 elements, the index never goes above 9, below 0
+        for (uint8 i = 0; i &lt; rates.length; i++) {
+            // if the days passed since the start is below the amountOfdays we use that rate
+            if (daysPassed &lt; rates[i].amountOfDays) {
+                return rates[i].price;
+            }
+        }
+        // If we reach here, means this is after the crowdfund ended
+        return 0;
+    }
+&nbsp;
+    /**
+     * @dev Sends presale tokens to any contributors when called by the owner can only be done before the crowdfund
+     * @param _batchOfAddresses An array of presale contributor addresses
+     * @param _amountOfTokens An array of tokens bought synchronized with the index value of _batchOfAddresses
+     * @return bool True if successful else false
+     */
+    function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountOfTokens) external onlyBeforeCrowdfund onlyOwner returns (bool success) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(_batchOfAddresses.length == _amountOfTokens.length);
+        for (uint256 i = 0; i &lt; _batchOfAddresses.length; i++) {
+            <span class="missing-if-branch" title="if path not taken" >I</span>if (!token.moveAllocation(_batchOfAddresses[i], _amountOfTokens[i])) {
+<span class="cstat-no" title="statement not covered" >                revert()</span>;
+            }
+        }
+        return true;
+    }
+    /**
+     * @dev Called by the owner to kill the contact once the crowdfund is finished and there are no tokens left
+     */
+    function kill() external onlyOwner {
+        uint256 amount;
+        (amount,) = token.allocations(this);
+        require(crowdfundFinalized == true &amp;&amp; amount == 0);
+        // Send any ETH to the owner
+        selfdestruct(owner);
+    }
+&nbsp;
+    /**
+    * @dev Adds single address to whitelist.
+    * @param _beneficiary Address to be added to the whitelist
+    */
+    function addToWhitelist(address _beneficiary) external onlyOwner {
+        whitelist[_beneficiary] = true;
+    }
+&nbsp;
+    /**
+    * @dev Adds list of addresses to whitelist.
+    * @param _beneficiaries Addresses to be added to the whitelist
+    */
+    function addManyToWhitelist(address[] _beneficiaries) external onlyOwner {
+        for (uint256 i = 0; i &lt; _beneficiaries.length; i++) {
+            whitelist[_beneficiaries[i]] = true;
+        }
+    }
+&nbsp;
+    /**
+    * @dev Removes list of addresses to whitelist
+    * @param _beneficiaries Addresses to be removed from the whitelist
+    */
+    function removeManyFromWhitelist(address[] _beneficiaries) external onlyOwner {
+        for (uint256 i = 0; i &lt; _beneficiaries.length; i++) {
+            whitelist[_beneficiaries[i]] = false;
+        }
+    }
+&nbsp;
+    /**
+    * @dev Removes single address from whitelist.
+    * @param _beneficiary Address to be removed to the whitelist
+    */
+    function removeFromWhitelist(address _beneficiary) external onlyOwner {
+        whitelist[_beneficiary] = false;
+    }
+&nbsp;
+    /**
+     * @dev Allows for users to send ETH to buy tokens
+     */
+    function () external payable {
+        buyTokens(msg.sender);
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 05 2018 12:13:41 GMT-0700 (PDT)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

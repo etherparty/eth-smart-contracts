@@ -1,3 +1,5 @@
+require('babel-register')
+
 module.exports = {
   networks: {
     development: {
@@ -5,7 +7,7 @@ module.exports = {
     	port: 8545,
     	network_id: '*',
       gas: 4612386
-    }, 
+    },
     ropsten: {
       host: 'https://ropsten.infura.io/VYHM28f6EsD7dSXSHcmM',
       port: 8545,
