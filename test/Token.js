@@ -47,9 +47,16 @@ contract('Token', function (accounts) {
   const epochs = [3, 4, 7, 14]
   const totalDays = 28
   const allocationAddresses = [forwardAddress, customer5, customer4, customer2, customer1, "0x0"]
-  const allocationBalances = [50000, 100000, 50000, 200000, 100000, 500000] // 500000 * 10^18
+  const allocationBalances = [
+    50000000000000000000000,
+    100000000000000000000000,
+    50000000000000000000000,
+    200000000000000000000000,
+    100000000000000000000000,
+    500000000000000000000000
+  ]
   const allocationTimelocks = [0, twentyEightDaysInSeconds, 10 * 24 * 60 * 60, 10 * 24 * 60 * 60, 15 * 24 * 60 * 60, 0]
-  const totalSupply_ = 1000000
+  const totalSupply_ = 1000000000000000000000000
   const withCrowdfund = false
   const crowdfundArgs = [
     owner,
@@ -89,7 +96,7 @@ contract('Token', function (accounts) {
     assert.equal(crowdfundAddress, crowdfund.address, "The contract has the right crowdfund address");
     assert.equal(tokensLocked, true, "Tokens are locked");
     assert.equal(owner, tokenOwner, "Owner is the right account");
-    assert.equal(totalSupply.eq(bigNumberize(totalSupply_, 18)), true, "Total supply is equal");
+    assert.equal(totalSupply.eq(totalSupply), true, "Total supply is equal");
 
     for (var i = 0; i < allocationBalances.length; i++) {
       let address = allocationAddresses[i]
@@ -97,7 +104,7 @@ contract('Token', function (accounts) {
         address = crowdfundAddress
       }
       let allocations = await token.allocations(address);
-      assert.equal(allocations[0].eq(bigNumberize(allocationBalances[i], 18)), true, "Allocation balance is right");
+      assert.equal(allocations[0].eq(allocationBalances[i]), true, "Allocation balance is right");
       assert.equal(allocations[1].eq(allocationTimelocks[i]), true, "Allocation timelock is right");
     }
     await jumpToTheFuture(20000)
@@ -369,6 +376,111 @@ contract('Token', function (accounts) {
       from: owner
     })
   });
+
+  it("OwnerMoveAllocation: It tests the ownerMoveAllocation function", async () => {
+
+    currentTime = await getTimestampOfCurrentBlock()
+    const crowdfund = await Crowdfund.new(
+      owner,
+      epochs,
+      prices,
+      receivingAccount,
+      forwardAddress,
+      totalDays,
+      totalSupply_,
+      withCrowdfund,
+      [forwardAddress, customer5, customer4, customer2, customer1, "0x0"],
+      allocationBalances, 
+      [0, twentyEightDaysInSeconds, 10 * 24 * 60 * 60, 10 * 24 * 60 * 60, 15 * 24 * 60 * 60, 0], {
+        from: owner
+      }
+    )
+    const token = await Token.at(await crowdfund.token());
+    // First allocation should be able to move (timelock of 0) -- but won't as the crowdfund is not scheduled
+    try {
+      await token.ownerMoveAllocation(customer4, web3.toWei(1, 'ether'), {
+        from: owner
+      })
+    } catch (e) {
+      ensureException(e)
+    }
+    
+    // Start the crowdfund now
+    await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {
+      from: owner
+    })
+    await jumpToTheFuture(102)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
+
+    assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+    // Buy tokens (Means the crowdfund allocation works)
+    await crowdfund.buyTokens(owner, {
+      from: owner,
+      value: web3.toWei('1', 'ether')
+    })
+    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+    assert.equal((await token.allocations(crowdfund.address))[0].eq((await token.crowdfundSupply()).minus(bigNumberize(prices[0], 18))), true, "Should equal")
+
+    // First allocation can move (timelock of 0)
+    await token.ownerMoveAllocation(forwardAddress, web3.toWei(1, 'ether'), {
+      from: owner
+    })
+    assert.equal((await token.balanceOf(forwardAddress)).eq(bigNumberize(1, 18)), true, "Should equal")
+
+    // Second allocation cannot move (timelock of 28 days)
+    try {
+      await token.ownerMoveAllocation(customer5, web3.toWei(1, 'ether'), {
+        from: owner
+      })
+    } catch (e) {
+      ensureException(e)
+    }
+    assert.equal((await token.balanceOf(customer5)).eq(0), true, "Should equal")
+
+    // Third allocation cannot move, only after 10 days
+    try {
+      await token.ownerMoveAllocation(customer4, web3.toWei(1, 'ether'), {
+        from: owner
+      })
+    } catch (e) {
+      ensureException(e)
+    }
+    assert.equal((await token.balanceOf(customer4)).eq(0), true, "Should equal")
+
+    await jumpToTheFuture(10 * 24 * 60 * 60 + 2000)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
+    await token.ownerMoveAllocation(customer4, web3.toWei(1, 'ether'), {
+      from: owner
+    })
+    assert.equal((await token.balanceOf(customer4)).eq(web3.toWei(1, 'ether')), true, "Should equal")
+
+
+
+    // Move all allocation from a specific allocation
+    await jumpToTheFuture(twentyEightDaysInSeconds + 2000)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
+
+
+    try {
+      await token.ownerMoveAllocation(accounts[8], '1', {
+        from: owner
+      })
+    } catch (e) {
+      ensureException(e)
+    }
+    assert.equal((await token.balanceOf(accounts[8])).eq(0), true, "Should equal")
+    await jumpToTheFuture(20000)
+    await crowdfund.changeWalletAddress(owner, {
+      from: owner
+    })
+  });
+
 });
 
 
