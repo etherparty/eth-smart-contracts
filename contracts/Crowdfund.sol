@@ -13,7 +13,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
     /////////////////////// VARIABLE INITIALIZATION ///////////////////////
 
     // Basic version #. Change every time a release happens.
-    uint16 public version;
+    uint16 public version = 1;
     // Amount of tokens sold during the crowdfund
     uint256 public tokensSold;
     // Amount of wei currently raised
@@ -117,7 +117,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
         uint256[] memory _allocBalances,
         uint256[] memory _timelocks
         ) public {
-
         // Change the owner to the owner address.
         owner = _owner;
         // If the user wants a whitelist or not
