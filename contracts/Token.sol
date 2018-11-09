@@ -24,7 +24,8 @@ contract Token is StandardToken, Ownable {
     mapping (address => Allocation) public allocations;
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
-
+    // Basic version #. Change every time a release happens.
+    uint256 public version = 2;
     // Total ICO supply
     uint256 public crowdfundSupply;
     // Crowdfund address
