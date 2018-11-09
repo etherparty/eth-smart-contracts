@@ -25,7 +25,7 @@ contract Token is StandardToken, Ownable {
 
 /////////////////////// VARIABLE INITIALIZATION ///////////////////////
     // Basic version #. Change every time a release happens.
-    uint16 public version = 1;
+    uint256 public version = 2;
     // Total ICO supply
     uint256 public crowdfundSupply;
     // Crowdfund address

@@ -13,7 +13,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
     /////////////////////// VARIABLE INITIALIZATION ///////////////////////
 
     // Basic version #. Change every time a release happens.
-    uint16 public version = 1;
+    uint256 public version = 2;
     // Amount of tokens sold during the crowdfund
     uint256 public tokensSold;
     // Amount of wei currently raised
