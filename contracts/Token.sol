@@ -180,4 +180,13 @@ contract Token is StandardToken, Ownable {
         return true;
     }
 
+    /**
+     * @dev Used by crowdfund contract to determine current balance of an crowdfund allocation
+ 
+     * @return uint Balance of Crowdfund
+    */
+    function getBalanceOfCrowdfundAllocation() public view returns(uint) {
+        return allocations[msg.sender].balance;
+    }
+
 }
