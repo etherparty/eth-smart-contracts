@@ -210,8 +210,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         uint256 tokens = weiAmount.mul(getRate());
         tokensSold = tokensSold.add(tokens);
         weiRaised = weiRaised.add(weiAmount);
-        // Transfer out the ETH to our wallet
-        wallet.transfer(weiAmount);
+
         uint256 balance = token.getBalanceOfCrowdfundAllocation();
         // We need to determine whether the amount sent is greater than the remaining balance
         // If it isn't, proceed as normal, otherwise calculate the difference, feed that into the moveAllocation instead.
@@ -222,9 +221,12 @@ contract Crowdfund is NonZero, CanReclaimToken {
                 revert("failed to move allocation");
             }
             // Send back remaining eth to the sender.
+            wallet.transfer(balance.div(getRate()));
             uint256 refund = tokens.div(getRate()) - balance.div(getRate());
             msg.sender.transfer(refund);
         } else {
+            // Transfer out the ETH to our wallet
+            wallet.transfer(weiAmount);
             // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
             if (!token.moveAllocation(_to, tokens)) {
                 revert("failed to move allocation");
