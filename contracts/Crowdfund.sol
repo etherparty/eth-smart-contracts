@@ -222,6 +222,8 @@ contract Crowdfund is NonZero, CanReclaimToken {
                 revert("failed to move allocation");
             }
             // Send back remaining eth to the sender.
+            uint refund = tokens.div(getRate()) - balance.div(getRate());
+            msg.sender.transfer(refund);
         } else {
             // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
             if (!token.moveAllocation(_to, tokens)) {
