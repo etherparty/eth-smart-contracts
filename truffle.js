@@ -9,8 +9,8 @@ module.exports = {
       gas: 4612386
     },
     ropsten: {
-      host: 'https://ropsten.infura.io/VYHM28f6EsD7dSXSHcmM',
-      port: 8545,
+      host: 'http://geth-r1.etherparty.com',
+      port: 443,
       network_id: 3,
       gas: 4612386
     },
