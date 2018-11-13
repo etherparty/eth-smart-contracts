@@ -185,7 +185,7 @@ contract Token is StandardToken, Ownable {
  
      * @return uint Balance of Crowdfund
     */
-    function getBalanceOfCrowdfundAllocation() public view returns(uint) {
+    function getBalanceOfCrowdfundAllocation() public onlyOwner view returns(uint) {
         return allocations[msg.sender].balance;
     }
 

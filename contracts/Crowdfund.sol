@@ -209,6 +209,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // Get the total rate of tokens
         uint256 tokens = weiAmount.mul(getRate());
         uint256 balance = token.getBalanceOfCrowdfundAllocation();
+        uint256 refund = 0;
         // We need to determine whether the amount sent is greater than the remaining balance
         // If it isn't, proceed as normal, otherwise calculate the difference, feed that into the moveAllocation instead.
         // And return the ether back to the sender.
@@ -219,23 +220,20 @@ contract Crowdfund is NonZero, CanReclaimToken {
             }
             // Calculate wei amount of the balance of tokens in crowdfund
             uint256 weiBalance = balance.div(getRate());
-            // Add in relevant stats to public variables with this partial refund.
-            tokensSold = tokensSold.add(balance);
-            weiRaised = weiRaised.add(weiBalance);
-            wallet.transfer(weiBalance);
-            // Send back remaining eth to the sender.
-            uint256 refund = weiAmount - weiBalance;
-            msg.sender.transfer(refund);
-        } else {
-            // Normal transfer.
-            tokensSold = tokensSold.add(tokens);
-            weiRaised = weiRaised.add(weiAmount);
-            // Transfer out the ETH to our wallet
-            wallet.transfer(weiAmount);
-            // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
-            if (!token.moveAllocation(_to, tokens)) {
-                revert("failed to move allocation");
-            }
+            refund = msg.value - weiBalance;
+            weiAmount = weiBalance;
+            tokens = balance;
+        }
+
+        tokensSold = tokensSold.add(tokens);
+        weiRaised = weiRaised.add(weiAmount);
+        if (refund != 0) msg.sender.transfer(refund);
+
+        // Transfer out the ETH to our wallet
+        wallet.transfer(weiAmount);
+        // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
+        if (!token.moveAllocation(_to, tokens)) {
+            revert("failed to move allocation");
         }
 
         emit TokenPurchase(_to, weiAmount, tokens);
