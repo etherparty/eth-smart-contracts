@@ -220,7 +220,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
             }
             // Calculate wei amount of the balance of tokens in crowdfund
             uint256 weiBalance = balance.div(getRate());
-            refund = msg.value - weiBalance;
+            refund = msg.value.sub(weiBalance);
             weiAmount = weiBalance;
             tokens = balance;
         }
