@@ -209,8 +209,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // Get the total rate of tokens
         uint256 tokens = weiAmount.mul(getRate());
         // Only declared for destructuring
-        uint256 balance;
-        (balance,) = token.allocations(this);
+        uint256 balance = getCrowdFundAllocation();
         uint256 refund = 0;
         // We need to determine whether the amount sent is greater than the remaining balance
         // If it isn't, proceed as normal, otherwise calculate the difference, feed that into the moveAllocation instead.
