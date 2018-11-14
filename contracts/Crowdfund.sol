@@ -214,10 +214,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // If it isn't, proceed as normal, otherwise calculate the difference, feed that into the moveAllocation instead.
         // And return the ether back to the sender.
         if (tokens > balance) {
-            // Send balance instead.
-            if (!token.moveAllocation(_to, balance)) {
-                revert("failed to move allocation");
-            }
             // Calculate wei amount of the balance of tokens in crowdfund
             uint256 weiBalance = balance.div(getRate());
             refund = msg.value.sub(weiBalance);
@@ -361,5 +357,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
     function getTokensSold() public view returns (uint256) {
         return tokensSold;
     }
+
 }
  
