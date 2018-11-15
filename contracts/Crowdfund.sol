@@ -208,14 +208,31 @@ contract Crowdfund is NonZero, CanReclaimToken {
         uint256 weiAmount = msg.value;
         // Get the total rate of tokens
         uint256 tokens = weiAmount.mul(getRate());
+        // Only declared for destructuring
+        uint256 balance = getCrowdFundAllocation();
+        uint256 refund = 0;
+        // We need to determine whether the amount sent is greater than the remaining balance
+        // If it isn't, proceed as normal, otherwise calculate the difference, feed that into the moveAllocation instead.
+        // And return the ether back to the sender.
+        if (tokens > balance && balance != 0) {
+            // Calculate wei amount of the balance of tokens in crowdfund
+            uint256 weiBalance = balance.div(getRate());
+            refund = msg.value.sub(weiBalance);
+            weiAmount = weiBalance;
+            tokens = balance;
+        }
+
         tokensSold = tokensSold.add(tokens);
         weiRaised = weiRaised.add(weiAmount);
+        if (refund != 0) msg.sender.transfer(refund);
+
         // Transfer out the ETH to our wallet
         wallet.transfer(weiAmount);
         // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
         if (!token.moveAllocation(_to, tokens)) {
             revert("failed to move allocation");
         }
+
         emit TokenPurchase(_to, weiAmount, tokens);
     }
 
@@ -341,5 +358,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
     function getTokensSold() public view returns (uint256) {
         return tokensSold;
     }
+
 }
  
