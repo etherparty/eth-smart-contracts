@@ -104,7 +104,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _allocBalances Array of allocation balances
      * @param _timelocks Array of timelocks for all the allocations
      */
-    constructor(
+    function Crowdfund (
         address _owner,
         uint256[] memory _epochs,
         uint256[] memory _prices,
@@ -358,6 +358,5 @@ contract Crowdfund is NonZero, CanReclaimToken {
     function getTokensSold() public view returns (uint256) {
         return tokensSold;
     }
-
 }
  

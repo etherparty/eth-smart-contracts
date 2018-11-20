@@ -47,5 +47,11 @@ module.exports = {
       // port: 80,
       network_id: "*"
     }
-  }
+  },
+    solc: {
+        optimizer: {
+            enabled: true,
+            runs: 200
+        }
+    }
 }
