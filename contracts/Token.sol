@@ -164,7 +164,7 @@ contract Token is StandardToken, Ownable {
         // Add to the msg.sender's balance
         balances[_to] = balances[_to].add(_amount);
 
-        totalSupply_ += _amount;
+        totalSupply_ = totalSupply_.add(_amount);
         emit Transfer(0x0, _to, _amount);
         return true;
     }
@@ -191,7 +191,7 @@ contract Token is StandardToken, Ownable {
         allocations[_to].balance = allocations[_to].balance.sub(_amount);
         balances[_to] = balances[_to].add(_amount);
 
-        totalSupply_ += _amount;
+        totalSupply_ = totalSupply_.add(_amount);
         emit Transfer(address(0), _to, _amount);
         return true;
     }
