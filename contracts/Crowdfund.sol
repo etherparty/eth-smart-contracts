@@ -358,6 +358,5 @@ contract Crowdfund is NonZero, CanReclaimToken {
     function getTokensSold() public view returns (uint256) {
         return tokensSold;
     }
-
 }
  

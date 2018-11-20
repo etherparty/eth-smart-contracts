@@ -99,15 +99,27 @@ contract Token is StandardToken, Ownable {
         );
         owner = _owner;
         // Set the total supply (from inherited contract)
-        totalSupply_ = _totalSupply;
+        totalSupply_ = 0;
         // Set the crowdfund address
         crowdfundAddress = msg.sender;
         // Go through every allocation, and add it in the allocations mapping
         uint256 totalTokens = 0;
+        // Flag to verify zero address exists
+        bool zeroAddressFound = false;
+
         for (uint8 i = 0; i < _allocBalances.length; i++) {
             uint256 alloc = _allocBalances[i];
+
             // As we don't know the crowdfund contract address beforehand, the 0x0 address will be the one telling us the crowdfund allocation
             if (_allocAddresses[i] == address(0)) {
+                // This checks for duplicate zero addresses inside of the allocAddresses argument
+                if(zeroAddressFound){
+                    revert();
+                } else {
+                    // Indicate we have found a 0 address
+                    zeroAddressFound = true;
+                }
+
                 // Msg.sender here is the Crowdfund contract, as it is the one creating this contract
                 _allocAddresses[i] = crowdfundAddress;
                 // Add to the crowdfundSupply variable
@@ -120,7 +132,7 @@ contract Token is StandardToken, Ownable {
             totalTokens = totalTokens.add(alloc);
         }
         // Ensure that the total supply matches all the allocations
-        require(totalTokens == totalSupply_, "invalid total tokens count");
+        require(totalTokens == _totalSupply, "invalid total tokens count");
     }
 
     /**
@@ -151,6 +163,8 @@ contract Token is StandardToken, Ownable {
         allocations[msg.sender].balance = allocations[msg.sender].balance.sub(_amount);
         // Add to the msg.sender's balance
         balances[_to] = balances[_to].add(_amount);
+
+        totalSupply_ = totalSupply_.add(_amount);
         emit Transfer(0x0, _to, _amount);
         return true;
     }
@@ -176,6 +190,8 @@ contract Token is StandardToken, Ownable {
         require(now > allocations[_to].timeLock.add(crowdFundStartTime), "current time must be greater than timelock");
         allocations[_to].balance = allocations[_to].balance.sub(_amount);
         balances[_to] = balances[_to].add(_amount);
+
+        totalSupply_ = totalSupply_.add(_amount);
         emit Transfer(address(0), _to, _amount);
         return true;
     }

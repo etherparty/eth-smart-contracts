@@ -136,34 +136,37 @@ contract('Crowdfund', function (accounts) {
     let errorSchedule = await getTimestampOfCurrentBlock() - 120
     try {
       await crowdfund.scheduleCrowdfund(errorSchedule)
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
     assert.equal((await crowdfund.startsAt()).eq(bigNumberize(0, 18)), true, "Should equal 0")
     assert.equal((await crowdfund.endsAt()).eq(bigNumberize(0, 18)), true, "Should equal 0")
     assert.equal((await token.crowdFundStartTime()).eq(bigNumberize(0, 0)), true, "Token should have the right start time")
-    
+
 
     // Now schedule the crowdfund for 2 minutes in the futures
     let firstSchedule = await getTimestampOfCurrentBlock() + 1000 + 4*60*60
 
     // We can schedule the crowdfund first, not reschedule it
     try {
-      await crowdfund.reScheduleCrowdfund(firstSchedule)
+      await crowdfund.reScheduleCrowdfund(firstSchedule);
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
     assert.equal((await token.crowdFundStartTime()).eq(0), true, "Token should have the right start time")
-    
+
 
     // call schedule crowdfund NOT from the owner
     try {
       await crowdfund.scheduleCrowdfund(firstSchedule, {from: customer1})
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
     assert.equal((await token.crowdFundStartTime()).eq(0), true, "Token should have the right start time")
-    
+
 
     await crowdfund.scheduleCrowdfund(firstSchedule)
 
@@ -173,6 +176,7 @@ contract('Crowdfund', function (accounts) {
         from: owner,
         value: web3.toWei('1', 'ether')
       })
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -180,7 +184,7 @@ contract('Crowdfund', function (accounts) {
     assert.equal((await crowdfund.startsAt()).eq(bigNumberize(firstSchedule, 0)), true, "Should equal the firstSchedule")
     assert.equal((await crowdfund.endsAt()).eq(bigNumberize(firstSchedule + totalDays * 24 * 60 * 60, 0)), true, "Should equal days total added")
     assert.equal((await token.crowdFundStartTime()).eq(bigNumberize(firstSchedule, 0)), true, "Token should have the right start time")
-    
+
 
     // We can still reschedule the crowdfund
     let secondSchedule = await getTimestampOfCurrentBlock() + 240 + 4*60*60 // 4 minutes
@@ -193,14 +197,15 @@ contract('Crowdfund', function (accounts) {
     }
     await crowdfund.reScheduleCrowdfund(secondSchedule)
     assert.equal((await token.crowdFundStartTime()).eq(bigNumberize(secondSchedule, 0)), true, "Token should have the right start time")
-    
+
 
     assert.equal((await crowdfund.startsAt()).eq(bigNumberize(secondSchedule, 0)), true, "Should equal the secondSchedule")
     assert.equal((await crowdfund.endsAt()).eq(bigNumberize(secondSchedule + totalDays * 24 * 60 * 60, 0)), true, "Should equal days total added II")
 
     // We can reschedule, but not schedule the crowdfund
     try {
-      await crowdfund.scheduleCrowdfund(secondSchedule)
+      await crowdfund.scheduleCrowdfund(secondSchedule);
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -212,13 +217,15 @@ contract('Crowdfund', function (accounts) {
 
     // Cannot schedule or reschedule crowdfund after crowdfund started
     try {
-      await crowdfund.scheduleCrowdfund(thirdSchedule)
+      await crowdfund.scheduleCrowdfund(thirdSchedule);
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
 
     try {
-      await crowdfund.scheduleCrowdfund(thirdSchedule)
+      await crowdfund.scheduleCrowdfund(thirdSchedule);
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -235,18 +242,15 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(owner, {
         from: owner,
         value: web3.toWei('1', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
     assert.equal((await token.balanceOf(owner)).eq(bigNumberize(0, 0)), true, "Should equal 0")
 
     await jumpToTheFuture(500)
-    try {
-      await crowdfund.changeWalletAddress(owner, {from: owner})
-    } catch (e) {
-      ensureException(e)
-    }
+      await crowdfund.changeWalletAddress(owner, {from: owner});
 
     let totalPrices = 0;
     let totalEpochs = 0;
@@ -284,13 +288,15 @@ contract('Crowdfund', function (accounts) {
 
     // Anyone else is trying to change the wallet address
     try {
-      await crowdfund.changeWalletAddress(owner, {from: customer1})
+      await crowdfund.changeWalletAddress(owner, {from: customer1});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
     // Same for forward address
     try {
-      await crowdfund.changeForwardAddress(owner, {from: customer1})
+      await crowdfund.changeForwardAddress(owner, {from: customer1});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -306,96 +312,99 @@ contract('Crowdfund', function (accounts) {
   });
 
   it("BuyTokens() and function (): It should let a buyer buy tokens", async() => {
-    const wallet = '0xac0782170Acc520e0EF968B149b1d432352f97a2'
-    const crowdfund = await Crowdfund.new(...crowdfundArgs, {from: owner})
-    const token = await Token.at(await crowdfund.token());
+      const wallet = '0xac0782170Acc520e0EF968B149b1d432352f97a2'
+      const crowdfund = await Crowdfund.new(...crowdfundArgs, {from: owner})
+      const token = await Token.at(await crowdfund.token());
 
-    // Buy tokens when not active Buying tokens should fail
-    try {
+
+      // Buy tokens when not active Buying tokens should fail
+      try {
+          await crowdfund.buyTokens(owner, {
+              from: owner,
+              value: web3.toWei('1', 'ether')
+          })
+          assert.equal(true,false,"Should fail");
+      } catch (e) {
+          ensureException(e)
+      }
+      // Start the crowdfund now
+      const timeToStart = await getTimestampOfCurrentBlock() + 100
+      await crowdfund.scheduleCrowdfund(timeToStart, {from: owner})
+
+      await jumpToTheFuture(500)
+      await crowdfund.changeWalletAddress(wallet, {from: owner})
+
+      assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+      assert.equal(await crowdfund.startsAt(), timeToStart, "Crowdfund should have the right start date")
+
+      // Buy token when active using buyTokens()
       await crowdfund.buyTokens(owner, {
-        from: owner,
-        value: web3.toWei('1', 'ether')
+          from: owner,
+          value: web3.toWei('1', 'ether')
       })
-    } catch (e) {
-      ensureException(e)
-    }
-    // Start the crowdfund now
-    const timeToStart = await getTimestampOfCurrentBlock() + 100
-    await crowdfund.scheduleCrowdfund(timeToStart, {from: owner})
 
-    await jumpToTheFuture(500)
-    await crowdfund.changeWalletAddress(wallet, {from: owner})
+      assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal balance")
+      assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal: weiraised")
+      assert.equal((await crowdfund.tokensSold()).eq(bigNumberize(prices[0], 18)), true, "Should equal tokens sold")
+      assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)), true, "Should equal: wallet balance")
 
-    assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
-    assert.equal(await crowdfund.startsAt(), timeToStart, "Crowdfund should have the right start date")
+      // Buy token when active using function()
+      await web3
+          .eth
+          .sendTransaction({
+              from: customer1,
+              to: crowdfund.address,
+              value: web3.toWei('1', 'ether')
+          })
+      assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
+      assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(2, 18)), true, "Should equal")
+      assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(2, 18)), true, "Should equal")
 
-    // Buy token when active using buyTokens()
-    await crowdfund.buyTokens(owner, {
-      from: owner,
-      value: web3.toWei('1', 'ether')
-    })
-    assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal balance")
-    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal: weiraised")
-    assert.equal((await crowdfund.tokensSold()).eq(bigNumberize(prices[0], 18)), true, "Should equal tokens sold")
-    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)), true, "Should equal: wallet balance")
+      // Buy token when active using function() and zero value
+      try {
+          await crowdfund.buyTokens(owner, {
+              from: owner,
+              value: web3.toWei('0', 'ether')
+          })
+      } catch (e) {
+          ensureException(e)
+      }
 
-    // Buy token when active using function()
-    await web3
-      .eth
-      .sendTransaction({
-        from: customer1,
-        to: crowdfund.address,
-        value: web3.toWei('1', 'ether')
-      })
-    assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
-    assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(2, 18)), true, "Should equal")
-    assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(2, 18)), true, "Should equal")
+      // Buy token when active using buyTokens() and zero value
+      try {
+          await crowdfund.buyTokens(owner, {
+              from: owner,
+              value: web3.toWei('0', 'ether')
+          })
+      } catch (e) {
+          ensureException(e)
+      }
 
-    // Buy token when active using function() and zero value
-    try {
-      await crowdfund.buyTokens(owner, {
-        from: owner,
-        value: web3.toWei('0', 'ether')
-      })
-    } catch (e) {
-      ensureException(e)
-    }
+      await jumpToTheFuture(twentyEightDaysInSeconds + 200)
+      await crowdfund.changeWalletAddress(owner, {from: owner})
 
-    // Buy token when active using buyTokens() and zero value
-    try {
-      await crowdfund.buyTokens(owner, {
-        from: owner,
-        value: web3.toWei('0', 'ether')
-      })
-    } catch (e) {
-      ensureException(e)
-    }
+      // Buy tokens after crowdfund is done but not closed
+      try {
+          await crowdfund.buyTokens(customer3, {
+              from: customer3,
+              value: web3.toWei('0', 'ether')
+          })
+      } catch (e) {
+          ensureException(e)
+      }
+      assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
 
-    await jumpToTheFuture(twentyEightDaysInSeconds + 200)
-    await crowdfund.changeWalletAddress(owner, {from: owner})
-
-    // Buy tokens after crowdfund is done but not closed
-    try {
-      await crowdfund.buyTokens(customer3, {
-        from: customer3,
-        value: web3.toWei('0', 'ether')
-      })
-    } catch (e) {
-      ensureException(e)
-    }
-    assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
-
-    // Buy tokens after crowdfund is closed
-    await crowdfund.closeCrowdfund({from: owner})
-    try {
-      await crowdfund.buyTokens(customer3, {
-        from: customer3,
-        value: web3.toWei('0', 'ether')
-      })
-    } catch (e) {
-      ensureException(e)
-    }
-    assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
+      // Buy tokens after crowdfund is closed
+      await crowdfund.closeCrowdfund({from: owner})
+      try {
+          await crowdfund.buyTokens(customer3, {
+              from: customer3,
+              value: web3.toWei('0', 'ether')
+          })
+      } catch (e) {
+          ensureException(e)
+      }
+      assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
   });
 
   it("BuyTokens(): It should not let a buyer buy tokens after there is no more crowdfu" +
@@ -418,7 +427,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(owner, {
         from: owner,
         value: web3.toWei('1', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -431,7 +441,7 @@ contract('Crowdfund', function (accounts) {
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
     assert.equal((await token.crowdFundStartTime()).eq(timeToStart), true, "Token should have the right start time")
-    
+
 
     // Buy token when active using buyTokens()
     assert.equal(((await token.allocations(crowdfund.address))[0]).eq(bigNumberize(1000, 18)), true, "Should equal")
@@ -447,7 +457,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(customer1, {
         from: owner,
         value: web3.toWei('1', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -461,7 +472,8 @@ contract('Crowdfund', function (accounts) {
 
     // Close crowdfund before crowdfund starts
     try {
-      await crowdfund.closeCrowdfund({from: owner})
+      await crowdfund.closeCrowdfund({from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -475,7 +487,8 @@ contract('Crowdfund', function (accounts) {
 
     // Close crowdfund during crowdfund
     try {
-      await crowdfund.closeCrowdfund({from: owner})
+      await crowdfund.closeCrowdfund({from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -487,7 +500,8 @@ contract('Crowdfund', function (accounts) {
 
     // Close crowdfund when crowdfund is done by customer1
     try {
-      await crowdfund.closeCrowdfund({from: customer1})
+      await crowdfund.closeCrowdfund({from: customer1});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -502,7 +516,8 @@ contract('Crowdfund', function (accounts) {
 
     // Retry closing the crowdfund
     try {
-      await crowdfund.closeCrowdfund({from: owner})
+      await crowdfund.closeCrowdfund({from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -514,7 +529,8 @@ contract('Crowdfund', function (accounts) {
 
     // Close crowdfund before crowdfund starts
     try {
-      await crowdfund.closeCrowdfund({from: owner})
+      await crowdfund.closeCrowdfund({from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -528,7 +544,8 @@ contract('Crowdfund', function (accounts) {
 
     // Close crowdfund during crowdfund
     try {
-      await crowdfund.closeCrowdfund({from: owner})
+      await crowdfund.closeCrowdfund({from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -540,7 +557,8 @@ contract('Crowdfund', function (accounts) {
 
     // Close crowdfund when crowdfund is done by customer1
     try {
-      await crowdfund.closeCrowdfund({from: customer1})
+      await crowdfund.closeCrowdfund({from: customer1});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -555,7 +573,8 @@ contract('Crowdfund', function (accounts) {
 
     // Retry closing the crowdfund
     try {
-      await crowdfund.closeCrowdfund({from: owner})
+      await crowdfund.closeCrowdfund({from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -573,6 +592,7 @@ contract('Crowdfund', function (accounts) {
     // deliver presale tokens before scheduling the crowdfund form owner
     try {
       await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -580,6 +600,7 @@ contract('Crowdfund', function (accounts) {
     // deliver presale tokens before scheduling the crowdfund from anyone
     try {
       await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: customer1});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -604,6 +625,7 @@ contract('Crowdfund', function (accounts) {
 
     try {
       await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -636,7 +658,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(customer1, {
         from: customer1,
         value: web3.toWei('1', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -653,7 +676,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(customer1, {
         from: customer1,
         value: web3.toWei('1', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -697,7 +721,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(owner, {
         from: owner,
         value: web3.toWei('0', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -708,7 +733,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(customer1, {
         from: customer1,
         value: web3.toWei('1', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -725,7 +751,8 @@ contract('Crowdfund', function (accounts) {
         from: customer2,
         to: crowdfund.address,
         value: web3.toWei('1', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -738,7 +765,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(owner, {
         from: owner,
         value: web3.toWei('0', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -751,7 +779,8 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(customer3, {
         from: customer3,
         value: web3.toWei('0', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -782,13 +811,14 @@ contract('Crowdfund', function (accounts) {
       await crowdfund.buyTokens(customer3, {
         from: customer3,
         value: web3.toWei('0', 'ether')
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
     assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
   });
- 
+
  it("changeCrowdfundStartTime, Should not let me call this function", async() => {
 
     const crowdfund = await Crowdfund.new(...crowdfundArgs, {from: owner})
@@ -798,9 +828,67 @@ contract('Crowdfund', function (accounts) {
     try {
       await token.changeCrowdfundStartTime(1455545454, {
         from: customer1
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
   });
+
+    it("constructing a crowdsale with multiple 0 zero addresses should revert", async() => {
+
+        const owner = accounts[0];
+        const receivingAccount = accounts[1];
+
+        const TokenGeneration = '0x0'
+        const Team = accounts[2];
+        const Sales = accounts[3];
+
+
+        const twentyEightDaysInSeconds = 2419200;
+        const prices = [1, 1, 1, 1] // 1*10^18 * 1000
+        const epochs = [3, 4, 7, 14]
+        const totalDays = 28
+        const allocationAddresses = [TokenGeneration, Team, Sales, "0x0", "0x0"]
+        const allocationBalances = [
+            3,
+            3,
+            1,
+            2,
+            1
+        ]
+
+        const allocationTimelocks = [0, 0, 0, 0, 0]
+        const totalSupply_ = 10;
+        const withCrowdfund = false
+        const crowdfundArgs = [
+            owner,
+            epochs,
+            prices,
+            receivingAccount,
+            TokenGeneration,
+            totalDays,
+            totalSupply_,
+            withCrowdfund,
+            allocationAddresses,
+            allocationBalances,
+            allocationTimelocks
+        ]
+
+        try {
+            // Crowdfund.class_defaults
+            const crowdfund = await Crowdfund.new(
+                ...crowdfundArgs, {
+                    from: owner
+                }
+            );
+
+            assert.equal(true,false,"Should fail")
+        } catch (e) {
+            ensureException(e)
+        }
+
+
+
+    });
 });

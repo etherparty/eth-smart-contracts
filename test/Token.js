@@ -80,6 +80,7 @@ contract('Token', function (accounts) {
         from: owner
       }
     )
+
     const token = await Token.at(await crowdfund.token());
 
     const name = await token.name();
@@ -125,7 +126,8 @@ contract('Token', function (accounts) {
     try {
       await token.transfer(customer1, web3.toWei(2, 'ether'), {
         from: owner
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -152,7 +154,8 @@ contract('Token', function (accounts) {
     try {
       await token.transfer(customer1, web3.toWei(2, 'ether'), {
         from: owner
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -203,7 +206,8 @@ contract('Token', function (accounts) {
     try {
       await token.transferFrom(owner, customer1, web3.toWei(2, 'ether'), {
         from: customer1
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -224,7 +228,8 @@ contract('Token', function (accounts) {
     try {
       await token.transferFrom(owner, customer1, web3.toWei(2, 'ether'), {
         from: customer1
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -273,21 +278,25 @@ contract('Token', function (accounts) {
       totalSupply_,
       withCrowdfund,
       [forwardAddress, customer5, customer4, customer2, customer1, "0x0"],
-      allocationBalances, 
+      allocationBalances,
       [0, twentyEightDaysInSeconds, 10 * 24 * 60 * 60, 10 * 24 * 60 * 60, 15 * 24 * 60 * 60, 0], {
         from: owner
       }
     )
     const token = await Token.at(await crowdfund.token());
     // First allocation should be able to move (timelock of 0) -- but won't as the crowdfund is not scheduled
+
+    let amountToRelease = web3.toWei(1, 'ether')
+
     try {
-      await token.moveAllocation(customer4, web3.toWei(1, 'ether'), {
+      await token.moveAllocation(customer4, amountToRelease, {
         from: customer5
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
-    
+
     // Start the crowdfund now
     await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {
       from: owner
@@ -298,25 +307,35 @@ contract('Token', function (accounts) {
     })
 
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
+
+    let totalSupplyBeforeMove = await token.totalSupply();
     // Buy tokens (Means the crowdfund allocation works)
     await crowdfund.buyTokens(owner, {
       from: owner,
-      value: web3.toWei('1', 'ether')
+      value: amountToRelease
     })
     assert.equal((await token.balanceOf(owner)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
     assert.equal((await token.allocations(crowdfund.address))[0].eq((await token.crowdfundSupply()).minus(bigNumberize(prices[0], 18))), true, "Should equal")
 
+    let totalSupplyAfter = await token.totalSupply();
+    let rate = await crowdfund.getRate();
+
+    assert.equal(totalSupplyAfter - totalSupplyBeforeMove, amountToRelease * rate, "Total Supply was not updated properly" )
+
+
     // First allocation can move (timelock of 0)
-    await token.moveAllocation(customer5, web3.toWei(1, 'ether'), {
+    await token.moveAllocation(customer5, amountToRelease, {
       from: forwardAddress
     })
     assert.equal((await token.balanceOf(customer5)).eq(bigNumberize(1, 18)), true, "Should equal")
+
 
     // Second allocation cannot move (timelock of 28 days)
     try {
       await token.moveAllocation(customer4, web3.toWei(1, 'ether'), {
         from: customer5
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -326,7 +345,8 @@ contract('Token', function (accounts) {
     try {
       await token.moveAllocation(customer3, web3.toWei(1, 'ether'), {
         from: customer4
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -357,7 +377,8 @@ contract('Token', function (accounts) {
     try {
       await token.moveAllocation(owner, '1', {
         from: customer2
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -366,7 +387,8 @@ contract('Token', function (accounts) {
     try {
       await token.moveAllocation(owner, '1', {
         from: accounts[8]
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -390,7 +412,7 @@ contract('Token', function (accounts) {
       totalSupply_,
       withCrowdfund,
       [forwardAddress, customer5, customer4, customer2, customer1, "0x0"],
-      allocationBalances, 
+      allocationBalances,
       [0, twentyEightDaysInSeconds, 10 * 24 * 60 * 60, 10 * 24 * 60 * 60, 15 * 24 * 60 * 60, 0], {
         from: owner
       }
@@ -400,11 +422,12 @@ contract('Token', function (accounts) {
     try {
       await token.ownerMoveAllocation(customer4, web3.toWei(1, 'ether'), {
         from: owner
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
-    
+
     // Start the crowdfund now
     await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {
       from: owner
@@ -433,17 +456,21 @@ contract('Token', function (accounts) {
     try {
       await token.ownerMoveAllocation(customer5, web3.toWei(1, 'ether'), {
         from: owner
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
+
+
     assert.equal((await token.balanceOf(customer5)).eq(0), true, "Should equal")
 
     // Third allocation cannot move, only after 10 days
     try {
       await token.ownerMoveAllocation(customer4, web3.toWei(1, 'ether'), {
         from: owner
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
@@ -470,7 +497,8 @@ contract('Token', function (accounts) {
     try {
       await token.ownerMoveAllocation(accounts[8], '1', {
         from: owner
-      })
+      });
+        assert.equal(true,false,"Should fail");
     } catch (e) {
       ensureException(e)
     }
