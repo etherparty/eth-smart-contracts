@@ -84,7 +84,7 @@ contract Token is StandardToken, Ownable {
      * @param _allocBalances Allocation balances
      * @param _timelocks Array of _timelocks (in amount of seconds)
      */ 
-    function Token (
+    constructor(
         address _owner,
         uint256 _totalSupply,
         address[] memory _allocAddresses,
