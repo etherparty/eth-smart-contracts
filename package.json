@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "truffle test"
+    "test": "node $NODE_DEBUG_OPTION ./node_modules/.bin/truffle test"
   },
   "author": "Etherparty",
   "license": "ISC",
@@ -15,9 +15,14 @@
     "babel-polyfill": "^6.26.0",
     "babel-register": "^6.26.0",
     "bignumber.js": "6.0.0",
+    "chai": "^4.0.2",
+    "chai-bignumber": "^2.0.0",
+    "chai-as-promised": "^7.0.0",
+    "ganache-cli": "^6.1.4",
+    "truffle": "^4.1.14",
     "zeppelin-solidity": "1.6.0"
   },
   "devDependencies": {
-    "solidity-coverage": "^0.4.15"
+    "solidity-coverage": "^0.5.5"
   }
 }
