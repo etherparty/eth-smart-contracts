@@ -83,14 +83,16 @@ contract Token is StandardToken, Ownable {
      * @param _allocAddresses Allocation addresses
      * @param _allocBalances Allocation balances
      * @param _timelocks Array of _timelocks (in amount of seconds)
-     */ 
+     */
     constructor(
         address _owner,
         uint256 _totalSupply,
         address[] memory _allocAddresses,
         uint256[] memory _allocBalances,
         uint256[] memory _timelocks
-        ) public {
+    )
+        public
+    {
 
         // Ensure that all three arrays have the same length and have a length cap of less than or equal to 10
         require(
@@ -140,9 +142,8 @@ contract Token is StandardToken, Ownable {
      * @param _crowdFundStartTime Timestamp of crowdfund start time
      * @return bool True if successful
      */
-    function changeCrowdfundStartTime(uint256 _crowdFundStartTime) external onlyCrowdfund returns(bool) {
+    function changeCrowdfundStartTime(uint256 _crowdFundStartTime) external onlyCrowdfund {
         crowdFundStartTime = _crowdFundStartTime;
-        return true;
     }
 
     /**
@@ -151,7 +152,7 @@ contract Token is StandardToken, Ownable {
      * @param _amount The amount of tokens being sent
      * @return bool True if successful else false
      */
-    function moveAllocation(address _to, uint256 _amount) public returns(bool) {
+    function moveAllocation(address _to, uint256 _amount) public {
         // Crowdfund sate needs to be initialized
         require(crowdFundStartTime > 0, "start time must be greater than 0");
         // Vesting for this specific address needs to be done or we let the crowdfund address get his allocation
@@ -166,22 +167,20 @@ contract Token is StandardToken, Ownable {
 
         totalSupply_ = totalSupply_.add(_amount);
         emit Transfer(0x0, _to, _amount);
-        return true;
     }
 
     /**
      * @dev Unlocks the tokens. Can only be called by the crowdfund contract
      * @return bool True if successful else false;
      */
-    function unlockTokens() external onlyCrowdfund returns (bool) {
+    function unlockTokens() external onlyCrowdfund {
         // This is a 1 way function, tokens can only be moved from a locked state to unlocked, and not vice versa
         tokensLocked = false;
-        return true;
     }
 
     /**
      * @dev Used by contract owner to move an allocation for whatever specified user is given, so long as their time lock is over
-     * @param _to The recipient address 
+     * @param _to The recipient address
      * @param _amount The amount of tokens to send
      * @return bool True if successful else false
      */

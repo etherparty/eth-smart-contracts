@@ -10,11 +10,6 @@ contract NonZero {
         _;
     }
 
-    modifier nonZeroAmount(uint _amount) {
-        require(_amount > 0, "amount must be greater than 0");
-        _;
-    }
-
     modifier nonZeroValue() {
         require(msg.value > 0, "msg value must be greater than 0");
         _;

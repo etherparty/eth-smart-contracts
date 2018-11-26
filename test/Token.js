@@ -1,6 +1,7 @@
 const BigNumber = require('bignumber.js');
 var Crowdfund = artifacts.require("./Crowdfund.sol");
 var Token = artifacts.require("./Token.sol");
+const { assertRevert } = require('./helpers/assertRevert');
 
 const utils = require("./utils")
 
@@ -71,6 +72,22 @@ contract('Token', function (accounts) {
     allocationBalances,
     allocationTimelocks
   ]
+
+  it("Test Bad Constructor Values", async () => {
+      let tokenArguments = [
+          owner,
+          100,
+          [owner, accounts[2], accounts[3]],
+          [50, 30, 10], // doesnt equal total supply
+          [0,0,0]
+      ]
+      // Bad totals value
+      await assertRevert(Token.new(...tokenArguments, {from: owner}));
+
+      // Uneven length of lists for params
+      tokenArguments[3] = [50,30]
+      await assertRevert(Token.new(...tokenArguments, {from: owner}));
+  });
 
 
   it("Init: The contract is initialized with the right variables", async () => {

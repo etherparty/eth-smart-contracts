@@ -46,7 +46,14 @@ module.exports = {
       port: 80,
       // port: 80,
       network_id: "*"
-    }
+    },
+      coverage: {
+          host: 'localhost',
+          network_id: '*',
+          port: 8556,
+          gasPrice:0x00001,
+          gas: 4612388000
+      }
   },
     solc: {
         optimizer: {

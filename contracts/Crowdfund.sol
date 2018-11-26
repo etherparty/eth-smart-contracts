@@ -73,8 +73,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
         _;
     }
 
-
-
     // Ensure actions can only happen before the crowdfund
     modifier onlyBeforeCrowdfund() {
         require(now <= startsAt, "time must be less than or equal to start time");
@@ -104,7 +102,7 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _allocBalances Array of allocation balances
      * @param _timelocks Array of timelocks for all the allocations
      */
-    constructor(
+    constructor (
         address _owner,
         uint256[] memory _epochs,
         uint256[] memory _prices,
@@ -116,7 +114,9 @@ contract Crowdfund is NonZero, CanReclaimToken {
         address[] memory _allocAddresses,
         uint256[] memory _allocBalances,
         uint256[] memory _timelocks
-        ) public {
+    )
+        public
+    {
         // Change the owner to the owner address.
         owner = _owner;
         // If the user wants a whitelist or not
@@ -124,9 +124,11 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // Wallet where ETH/SBTC will be forwarded to
         wallet = _wallet;
         // Address where leftover tokens will be forwarded to
-        forwardTokensTo = _forwardTokensTo; 
+        forwardTokensTo = _forwardTokensTo;
         // Crowdfund length is in seconds
         crowdfundLength = _totalDays.mul(1 days);
+
+        require(_totalDays > 0, "crowdfund must be greater than zero");
 
         // Ensure the prices per epoch passed in are the same length and limit the size of the array
         require(_epochs.length == _prices.length && _prices.length <= 10, "array lengths must be equal and at most 10 elements");
@@ -156,13 +158,13 @@ contract Crowdfund is NonZero, CanReclaimToken {
         // Crowdfund cannot be already activated
         require(isActivated == false);
         startsAt = _startDate;
+
         // Change the start time on the token contract too, as the vesting period changes
-        if (!token.changeCrowdfundStartTime(startsAt)) {
-            revert();
-        }
+        token.changeCrowdfundStartTime(startsAt);
+
         endsAt = startsAt.add(crowdfundLength);
         isActivated = true;
-        require(startsAt >= now && endsAt > startsAt, "invalid start time");
+        require(startsAt >= now, "invalid start time");
         return true;
     }
 
@@ -172,15 +174,14 @@ contract Crowdfund is NonZero, CanReclaimToken {
      *
      */
     function reScheduleCrowdfund(uint256 _startDate) external onlyOwner returns(bool) {
-        // We require this function to only be called 4 hours before the crowfund starts and the crowdfund has been scheduled
-        require(now < startsAt.sub(4 hours) && isActivated == true, "must be 4 hours less than start and must be activated");
+        // We require this function to only be called 4 hours before the crowdfund starts and the crowdfund has been scheduled
+        require(now < _startDate.sub(4 hours) && isActivated == true, "must be 4 hours less than start and must be activated");
         startsAt = _startDate;
+
         // Change the start time on the token contract too, as the vesting period changes
-        if (!token.changeCrowdfundStartTime(startsAt)) {
-            revert();
-        }
+        token.changeCrowdfundStartTime(startsAt);
+
         endsAt = startsAt.add(crowdfundLength);
-        require(startsAt >= now && endsAt > startsAt, "invalid start time");
         return true;
     }
 
@@ -224,14 +225,14 @@ contract Crowdfund is NonZero, CanReclaimToken {
 
         tokensSold = tokensSold.add(tokens);
         weiRaised = weiRaised.add(weiAmount);
-        if (refund != 0) msg.sender.transfer(refund);
+        if (refund != 0) {
+            msg.sender.transfer(refund);
+        }
 
         // Transfer out the ETH to our wallet
         wallet.transfer(weiAmount);
         // Here the msg.sender is the crowdfund, so we take tokens from the crowdfund allocation
-        if (!token.moveAllocation(_to, tokens)) {
-            revert("failed to move allocation");
-        }
+        token.moveAllocation(_to, tokens);
 
         emit TokenPurchase(_to, weiAmount, tokens);
     }
@@ -245,14 +246,12 @@ contract Crowdfund is NonZero, CanReclaimToken {
         uint256 amount = getCrowdFundAllocation();
         if (amount > 0) {
             // Transfer all of the tokens out to the final address (if burning, send to 0x0)
-            if (!token.moveAllocation(forwardTokensTo, amount)) {
-                revert("failed to move allocation");
-            }
+            token.moveAllocation(forwardTokensTo, amount);
         }
+
         // Unlock the tokens
-        if (!token.unlockTokens()) {
-            revert("failed to move allocation");
-        }
+        token.unlockTokens();
+
         crowdfundFinalized = true;
         return true;
     }
@@ -265,19 +264,18 @@ contract Crowdfund is NonZero, CanReclaimToken {
      */
     function deliverPresaleTokens(
         address[] _batchOfAddresses,
-        uint256[] _amountOfTokens) 
-        external 
-        onlyBeforeCrowdfund 
+        uint256[] _amountOfTokens)
+        external
+        onlyBeforeCrowdfund
         onlyOwner returns (bool success) {
         require(_batchOfAddresses.length == _amountOfTokens.length, "array lengths must be equal");
+
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
-            if (!token.moveAllocation(_batchOfAddresses[i], _amountOfTokens[i])) {
-                revert("failed to move allocation");
-            }
+            token.moveAllocation(_batchOfAddresses[i], _amountOfTokens[i]);
         }
         return true;
     }
- 
+
     /**
     * @dev Adds single address to whitelist.
     * @param _beneficiary Address to be added to the whitelist
@@ -350,7 +348,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
         (allocation, ) = token.allocations(this);
     }
 
-
     /**
      * @dev Used to retrieve how many tokens the crowdfund has sold
      * @return The number of tokens this crowdfund has sold
@@ -359,4 +356,3 @@ contract Crowdfund is NonZero, CanReclaimToken {
         return tokensSold;
     }
 }
- 

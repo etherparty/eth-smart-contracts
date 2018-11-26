@@ -1,4 +1,5 @@
 const BigNumber = require('bignumber.js');
+const { assertRevert } = require('./helpers/assertRevert');
 var Crowdfund = artifacts.require("./Crowdfund.sol");
 var Token = artifacts.require("./Token.sol");
 const utils = require("./utils")
@@ -84,6 +85,38 @@ contract('Crowdfund', function (accounts) {
     allocationTimelocks
   ]
 
+    it("BadConstructor Arguments", async() => {
+        // Should fail if constructor arguments are not the right lengths
+        let badArgs = [
+            owner,
+            epochs,
+            prices,
+            receivingAccount,
+            forwardAddress,
+            totalDays,
+            totalSupply,
+            withCrowdfund,
+            allocationAddresses,
+            allocationBalances,
+            allocationTimelocks
+        ];
+
+        badArgs[1] = [3, 4, 7];
+        await assertRevert(Crowdfund.new(...badArgs, {from: owner}))
+
+        // Fix the bad arg, then introduce another bad arg
+        badArgs[1] = epochs;
+        badArgs[5] = 26;
+
+        await assertRevert(Crowdfund.new(...badArgs, {from: owner}))
+
+        // Fix the bad arg, then introduce another bad arg
+        badArgs[1] = [0,0,0,0];
+        badArgs[5] = 0;
+
+        await assertRevert(Crowdfund.new(...badArgs, {from: owner}))
+    });
+
   it("Init: The contract is initialized with the right variables", async() => {
     const crowdfund = await Crowdfund.new(...crowdfundArgs, {from: owner})
     const token = await Token.at(await crowdfund.token());
@@ -147,6 +180,14 @@ contract('Crowdfund', function (accounts) {
 
     // Now schedule the crowdfund for 2 minutes in the futures
     let firstSchedule = await getTimestampOfCurrentBlock() + 1000 + 4*60*60
+
+      // Should revert if start time is before current time
+      try {
+          await crowdfund.reScheduleCrowdfund(1);
+          assert.equal(true,false,"Should fail");
+      } catch (e) {
+          ensureException(e)
+      }
 
     // We can schedule the crowdfund first, not reschedule it
     try {
@@ -366,6 +407,7 @@ contract('Crowdfund', function (accounts) {
               from: owner,
               value: web3.toWei('0', 'ether')
           })
+          assert.equal(true,false,"Should fail");
       } catch (e) {
           ensureException(e)
       }
@@ -376,6 +418,7 @@ contract('Crowdfund', function (accounts) {
               from: owner,
               value: web3.toWei('0', 'ether')
           })
+          assert.equal(true,false,"Should fail");
       } catch (e) {
           ensureException(e)
       }
@@ -389,6 +432,7 @@ contract('Crowdfund', function (accounts) {
               from: customer3,
               value: web3.toWei('0', 'ether')
           })
+          assert.equal(true,false,"Should fail");
       } catch (e) {
           ensureException(e)
       }
@@ -523,6 +567,44 @@ contract('Crowdfund', function (accounts) {
     }
   });
 
+    it("closeCrowdfund(): It should not release more tokens if the crowdfund has no tokens", async() => {
+        let amounts = [5000, 100, 500, 200, 10, 0];
+
+        const zeroTokenCrowdfundArgs = [
+            owner,
+            epochs,
+            prices,
+            receivingAccount,
+            forwardAddress,
+            totalDays,
+            5810,
+            true, // We want the whitelist
+            allocationAddresses,
+            amounts,
+            allocationTimelocks
+        ]
+
+        const crowdfund = await Crowdfund.new(...zeroTokenCrowdfundArgs, {from: owner})
+        const token = await Token.at(await crowdfund.token());
+
+
+        await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {from: owner})
+
+        await jumpToTheFuture(500)
+        await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+
+        await jumpToTheFuture(twentyEightDaysInSeconds + 500)
+        await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
+
+        // Close crowdfund when crowdfund is done by owner
+        await crowdfund.closeCrowdfund({from: owner})
+        assert.equal((await crowdfund.crowdfundFinalized()), true, "Should be closed")
+        assert.equal((await token.tokensLocked()), false, "Should be unlocked")
+        assert.equal((await token.balanceOf(forwardAddress)).eq(amounts[allocationBalances.length - 1]), true, "Should receive all of the tokens")
+
+    });
+
   it("closeCrowdfund(): It should let me burn tokens", async() => {
     const crowdfund = await Crowdfund.new(owner, epochs, prices, receivingAccount, '0x0', totalDays, totalSupply, withCrowdfund, allocationAddresses, allocationBalances, allocationTimelocks, {from: owner})
     const token = await Token.at(await crowdfund.token());
@@ -608,6 +690,25 @@ contract('Crowdfund', function (accounts) {
     // deliver presale tokens before the crowdfund (scheduled)
     await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {from: owner})
     // await jumpToTheFuture(500)
+
+      // send non equal lengths of arrays
+      let badPresaleAmounts = [1000000000000000000, 500000000000000000, 10000000000000000000, 1102330505704040302];
+      try {
+          await crowdfund.deliverPresaleTokens(presaleAddresses, badPresaleAmounts, {from: owner});
+          assert.equal(true,false,"Should fail");
+      } catch (e) {
+          ensureException(e)
+      }
+
+      // provide an amount higher than crowdfund has available
+      badPresaleAmounts = [1000000000000000000, 500000000000000000, 10000000000000000000, 1102330505704040302, 500000000000000000000000];
+      try {
+          await crowdfund.deliverPresaleTokens(presaleAddresses, badPresaleAmounts, {from: owner});
+          assert.equal(true,false,"Should fail");
+      } catch (e) {
+          ensureException(e)
+      }
+
     await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
     for (let i = 0; i < presaleAddresses.length; i++) {
       const balance = await token.balanceOf(presaleAddresses[i]);
@@ -621,8 +722,9 @@ contract('Crowdfund', function (accounts) {
 
     await jumpToTheFuture(twentyEightDaysInSeconds + 500)
     await crowdfund.changeWalletAddress(receivingAccount, {from: owner})
-    // deliver presale tokens after the crowdfund
 
+
+    // deliver presale tokens after the crowdfund
     try {
       await crowdfund.deliverPresaleTokens(presaleAddresses, presaleAmounts, {from: owner});
         assert.equal(true,false,"Should fail");
@@ -669,6 +771,8 @@ contract('Crowdfund', function (accounts) {
     await jumpToTheFuture(500)
     await crowdfund.changeWalletAddress(wallet, {from: owner})
 
+    await assertRevert(crowdfund.changeWalletAddress(0x0, {from: owner}));
+
     assert.equal(await crowdfund.isActivated(), true, "Crowdfund should be active")
 
     // Buy tokens the owner is not whitelisted
@@ -694,6 +798,13 @@ contract('Crowdfund', function (accounts) {
       from: customer1,
       value: web3.toWei('1', 'ether')
     })
+
+
+    let amountShouldHaveSold = web3.toWei('1', 'ether')
+    let rate = await crowdfund.getRate();
+    let amountOfTokensSold = await crowdfund.getTokensSold()
+
+    assert.equal(amountOfTokensSold, amountShouldHaveSold * rate, "Should equal")  ;
     assert.equal((await token.balanceOf(customer1)).eq(bigNumberize(prices[0], 18)), true, "Should equal")
     assert.equal((await crowdfund.weiRaised()).eq(bigNumberize(1, 18)), true, "Should equal")
     assert.equal((await web3.eth.getBalance(wallet)).eq(bigNumberize(1, 18)), true, "Should equal")
@@ -818,6 +929,56 @@ contract('Crowdfund', function (accounts) {
     }
     assert.equal((await token.balanceOf(customer3)).eq(bigNumberize(0, 18)), true, "Should equal")
   });
+
+    it("Should refund a user if they buy more tokens than the crowdsale has available",
+        async() => {
+
+            const newCrowdfundArgs = [
+                owner,
+                epochs,
+                [1,1,1,1],
+                receivingAccount,
+                forwardAddress,
+                totalDays,
+                100,
+                true, // We want the whitelist
+                allocationAddresses,
+                [
+                    10,
+                    10,
+                    10,
+                    10,
+                    10,
+                    50
+                ],
+                allocationTimelocks
+            ]
+
+            const wallet = '0xDFaA222a5ce7f361e87A85905272C2F02fb19195'
+            const crowdfund = await Crowdfund.new(...newCrowdfundArgs, {from: owner})
+            const token = await Token.at(await crowdfund.token());
+
+
+            // Start the crowdfund now
+            await crowdfund.scheduleCrowdfund(await getTimestampOfCurrentBlock() + 100, {from: owner})
+
+            await jumpToTheFuture(500)
+            await crowdfund.addToWhitelist(customer1, {from: owner})
+            await jumpToTheFuture(500)
+            await crowdfund.changeWalletAddress(wallet, {from: owner})
+
+            let amountOfTokensToBuy = 51;
+
+            // Buy token when active using buyTokens()
+            await crowdfund.buyTokens(customer1, {
+                from: customer1,
+                value: amountOfTokensToBuy
+            })
+
+            let amountOfTokens = await token.balanceOf(customer1);
+            assert.equal(amountOfTokens, amountOfTokensToBuy - 1, "Did not purchase the correct amount of tokens")
+
+        });
 
  it("changeCrowdfundStartTime, Should not let me call this function", async() => {
 

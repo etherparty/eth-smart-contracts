@@ -4,5 +4,6 @@ build
 coverage
 coverage.json
 package-lock.json
+scripts
 .idea
 .DS_Store
