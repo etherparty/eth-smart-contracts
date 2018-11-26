@@ -73,8 +73,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
         _;
     }
 
-
-
     // Ensure actions can only happen before the crowdfund
     modifier onlyBeforeCrowdfund() {
         require(now <= startsAt, "time must be less than or equal to start time");
@@ -105,20 +103,20 @@ contract Crowdfund is NonZero, CanReclaimToken {
      * @param _timelocks Array of timelocks for all the allocations
      */
     constructor (
-            address _owner,
-            uint256[] memory _epochs,
-            uint256[] memory _prices,
-            address _wallet,
-            address _forwardTokensTo,
-            uint256 _totalDays,
-            uint256 _totalSupply,
-            bool _withWhitelist,
-            address[] memory _allocAddresses,
-            uint256[] memory _allocBalances,
-            uint256[] memory _timelocks
-        )
-            public
-        {
+        address _owner,
+        uint256[] memory _epochs,
+        uint256[] memory _prices,
+        address _wallet,
+        address _forwardTokensTo,
+        uint256 _totalDays,
+        uint256 _totalSupply,
+        bool _withWhitelist,
+        address[] memory _allocAddresses,
+        uint256[] memory _allocBalances,
+        uint256[] memory _timelocks
+    )
+        public
+    {
         // Change the owner to the owner address.
         owner = _owner;
         // If the user wants a whitelist or not
@@ -349,7 +347,6 @@ contract Crowdfund is NonZero, CanReclaimToken {
     function getCrowdFundAllocation() public view returns (uint256 allocation) {
         (allocation, ) = token.allocations(this);
     }
-
 
     /**
      * @dev Used to retrieve how many tokens the crowdfund has sold

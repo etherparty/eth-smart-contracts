@@ -90,7 +90,9 @@ contract Token is StandardToken, Ownable {
         address[] memory _allocAddresses,
         uint256[] memory _allocBalances,
         uint256[] memory _timelocks
-        ) public {
+    )
+        public
+    {
 
         // Ensure that all three arrays have the same length and have a length cap of less than or equal to 10
         require(
