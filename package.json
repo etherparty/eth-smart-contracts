@@ -16,13 +16,15 @@
     "babel-register": "^6.26.0",
     "bignumber.js": "6.0.0",
     "chai": "^4.0.2",
-    "chai-bignumber": "^2.0.0",
     "chai-as-promised": "^7.0.0",
+    "chai-bignumber": "^2.0.0",
+    "flattener": "^0.3.0",
     "ganache-cli": "^6.1.4",
     "truffle": "^4.1.14",
     "zeppelin-solidity": "1.6.0"
   },
   "devDependencies": {
-    "solidity-coverage": "^0.5.5"
+    "solidity-coverage": "^0.5.5",
+    "truffle-flattener": "^1.2.10"
   }
 }
